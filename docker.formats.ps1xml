@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>Docker.Image</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.Image</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>ID</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Repository</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Tag</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $_.ID.Substring(7, 12)
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Created</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Size</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>Docker.Container</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.Container</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>ID</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Command</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Status</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <!-- ID -->
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $_.ID.Substring(0, 12)
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <!-- Image -->
+                            <TableColumnItem>
+                                <PropertyName>Image</PropertyName>
+                            </TableColumnItem>
+                            <!-- Command -->
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $CommandName = $_.Command
+                                    if ($CommandName.Length -gt 20) {
+                                        return $CommandName.Substring(0, 18) + '…"'
+                                    }
+                                    else {
+                                        return $CommandName
+                                    }
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <!-- CreatedAt -->
+                            <TableColumnItem>
+                                <PropertyName>CreatedAt</PropertyName>
+                            </TableColumnItem>
+                            <!-- Status -->
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $Color = switch ($_.State) {
+                                        'created' { $PSStyle.Foreground.BrightYellow }
+                                        'dead' { $PSStyle.Foreground.Red }
+                                        'exited' { $PSStyle.Foreground.BrightRed }
+                                        'paused' { $PSStyle.Foreground.BrightYellow }
+                                        'removing' { $PSStyle.Foreground.BrightBlack }
+                                        'restarting' { $PSStyle.Foreground.BrightYellow }
+                                        'running' { $PSStyle.Foreground.BrightCyan }
+                                    }
+                                    "$Color$($_.Status)$($PSStyle.Reset)"
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <!-- Ports -->
+                            <TableColumnItem>
+                                <PropertyName>Ports</PropertyName>
+                            </TableColumnItem>
+                            <!-- Names -->
+                            <TableColumnItem>
+                                <PropertyName>Names</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>Docker.Context</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.Context</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>Name</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    if (-not $_.Current) {
+                                        return $_.Name
+                                    }
+
+                                    return "$($PSStyle.Foreground.BrightCyan)$($_.Name)$($PSStyle.Reset)"
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Type</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Description</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>DockerEndpoint</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>KubernetesEndpoint</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Orchestrator</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>
