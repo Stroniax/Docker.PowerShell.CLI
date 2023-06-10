@@ -20,7 +20,7 @@
                     <TableRowEntry>
                         <TableColumnItems>
                             <TableColumnItem>
-                                <PropertyName>Repository</PropertyName>
+                                <PropertyName>Name</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>Tag</PropertyName>
@@ -32,6 +32,7 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>Created</PropertyName>
+                                <FormatString>yyyy-MM-dd HH:mm:ss zzzz</FormatString>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>Size</PropertyName>
@@ -87,9 +88,10 @@
                                     }
                                 </ScriptBlock>
                             </TableColumnItem>
-                            <!-- CreatedAt -->
+                            <!-- Created -->
                             <TableColumnItem>
-                                <PropertyName>CreatedAt</PropertyName>
+                                <PropertyName>Created</PropertyName>
+                                <FormatString>yyyy-MM-dd HH:mm:ss zzzz</FormatString>
                             </TableColumnItem>
                             <!-- Status -->
                             <TableColumnItem>

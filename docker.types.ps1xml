@@ -15,6 +15,16 @@
                     $this.RawMounts.Split(',')
                 </GetScriptBlock>
             </ScriptProperty>
+            <ScriptProperty>
+                <Name>Created</Name>
+                <GetScriptBlock>
+                    [DateTimeOffset][string]$this.CreatedAt.Split(' ')[0..2]
+                </GetScriptBlock>
+            </ScriptProperty>
+            <AliasProperty>
+                <Name>Name</Name>
+                <ReferencedMemberName>Repository</ReferencedMemberName>
+            </AliasProperty>
         </Members>
     </Type>
     <Type>
@@ -30,6 +40,12 @@
                 <Name>Labels</Name>
                 <GetScriptBlock>
                     $this.RawLabels.Split(',')
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>Created</Name>
+                <GetScriptBlock>
+                    [DateTimeOffset][string]$this.CreatedAt.Split(' ')[0..2]
                 </GetScriptBlock>
             </ScriptProperty>
         </Members>
