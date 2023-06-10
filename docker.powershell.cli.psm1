@@ -600,9 +600,9 @@ function New-DockerContainer {
         $ArgumentList.Add($ImageName)
 
         if (!$PSCmdlet.ShouldProcess(
-            "Creating container '$Name' from image '$ImageName'.",
-            "Create container '$Name' from image '$ImageName'?",
-            "docker $ArgumentList")) {
+                "Creating container '$Name' from image '$ImageName'.",
+                "Create container '$Name' from image '$ImageName'?",
+                "docker $ArgumentList")) {
             return
         }
 
@@ -669,10 +669,9 @@ function Remove-DockerContainer {
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
 
         if (!$PSCmdlet.ShouldProcess(
-            "Removing $ShouldProcessTarget.",
-            "Remove $ShouldProcessTarget?",
-            "docker $ArgumentList"))
-        {
+                "Removing $ShouldProcessTarget.",
+                "Remove $ShouldProcessTarget?",
+                "docker $ArgumentList")) {
             return;
         }
         Invoke-Docker $ArgumentList -Context $Context | Out-Null
@@ -764,10 +763,10 @@ function Start-DockerContainer {
         
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
         if (!$PSCmdlet.ShouldProcess(
-            "Starting $ShouldProcessTarget.",
-            "Start $ShouldProcessTarget?",
-            "docker $ArgumentList"
-        )) {
+                "Starting $ShouldProcessTarget.",
+                "Start $ShouldProcessTarget?",
+                "docker $ArgumentList"
+            )) {
             return
         }
 
@@ -840,10 +839,10 @@ function Stop-DockerContainer {
 
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
         if (!$PSCmdlet.ShouldProcess(
-            "$StopOrKill $ShouldProcessTarget.",
-            "$StopOrKill $ShouldProcessTarget?",
-            "docker $ArgumentList"
-        )) {
+                "$StopOrKill $ShouldProcessTarget.",
+                "$StopOrKill $ShouldProcessTarget?",
+                "docker $ArgumentList"
+            )) {
             return
         }
 
@@ -914,9 +913,9 @@ function Restart-DockerContainer {
 
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
         if (!$PSCmdlet.ShouldProcess(
-            "Restarting $ShouldProcessTarget.",
-            "Restart $ShouldProcessTarget?",
-            "docker $ArgumentList")) {
+                "Restarting $ShouldProcessTarget.",
+                "Restart $ShouldProcessTarget?",
+                "docker $ArgumentList")) {
             return
         }
 
@@ -979,10 +978,10 @@ function Suspend-DockerContainer {
     }
 
     if (!$PSCmdlet.ShouldProcess(
-        "Pausing all processes in $ContainerIdentification.",
-        "Pause all processes in $ContainerIdentification?",
-        "docker $ArgumentList"
-    )) {
+            "Pausing all processes in $ContainerIdentification.",
+            "Pause all processes in $ContainerIdentification?",
+            "docker $ArgumentList"
+        )) {
         return
     }
 
@@ -1044,10 +1043,10 @@ function Resume-DockerContainer {
     }
 
     if (!$PSCmdlet.ShouldProcess(
-        "Unpausing all processes in $ContainerIdentification.",
-        "Unpause all processes in $ContainerIdentification?",
-        "docker $ArgumentList"
-    )) {
+            "Unpausing all processes in $ContainerIdentification.",
+            "Unpause all processes in $ContainerIdentification?",
+            "docker $ArgumentList"
+        )) {
         return
     }
 
@@ -1104,7 +1103,7 @@ function Wait-DockerContainer {
         DefaultParameterSetName = 'Id',
         PositionalBinding = $false,
         RemotingCapability = [RemotingCapability]::OwnedByCommand
-        )]
+    )]
     [Alias('wdc')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
@@ -1173,9 +1172,9 @@ function Rename-DockerContainer {
         if (!$?) { return }
 
         if ($PSCmdlet.ShouldProcess(
-            "Renaming docker container '$($Container.Id)' from '$($Container.Names)' to $($NewName).",
-            "Rename docker container '$($Container.Id)' from '$($Container.Names)' to $($NewName)?",
-            "docker $ArgumentList")) {
+                "Renaming docker container '$($Container.Id)' from '$($Container.Names)' to $($NewName).",
+                "Rename docker container '$($Container.Id)' from '$($Container.Names)' to $($NewName)?",
+                "docker $ArgumentList")) {
             Invoke-Docker rename $Container.Id $NewName -Context $Context
             if ($PassThru) {
                 Get-DockerContainerSingle -Name $NewName -Context $Context
@@ -1189,7 +1188,7 @@ function Get-DockerContainerLog {
         DefaultParameterSetName = 'Id',
         PositionalBinding = $false,
         RemotingCapability = [RemotingCapability]::OwnedByCommand
-        )]
+    )]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
         [SupportsWildcards()]
