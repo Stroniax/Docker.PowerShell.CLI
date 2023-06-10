@@ -1380,6 +1380,30 @@ function Find-DockerImage {
 }
 #endregion Docker Image
 
+#region Docker Version
+function Get-DockerVersion {
+    [CmdletBinding(
+        RemotingCapability = [RemotingCapability]::OwnedByCommand
+    )]
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter([DockerContextCompleter])]
+        [string]
+        $Context
+    )
+    process {
+        Invoke-Docker version --format '{{ json . }}' -Context $Context | ForEach-Object {
+            $pso = $_ | ConvertFrom-Json
+            $pso.PSTypeNames.Insert(0, 'Docker.Version')
+            $pso.Client.PSTypeNames.Insert(0, 'Docker.ClientVersion')
+            $pso.Server.PSTypeNames.Insert(0, 'Docker.ServerVersion')
+            $pso
+        }
+    }
+}
+#endregion
+
 #region Docker Context
 function Get-DockerContext {
     [Alias('gdcx')]

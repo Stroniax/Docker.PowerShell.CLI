@@ -44,6 +44,24 @@
         </Members>
     </Type>
     <Type>
+        <Name>Docker.ClientVersion</Name>
+        <Members>
+            <ScriptMethod>
+                <Name>ToString</Name>
+                <Script>$this.Version</Script>
+            </ScriptMethod>
+        </Members>
+    </Type>
+    <Type>
+        <Name>Docker.ServerVersion</Name>
+        <Members>
+            <ScriptMethod>
+                <Name>ToString</Name>
+                <Script>$this.Version</Script>
+            </ScriptMethod>
+        </Members>
+    </Type>
+    <Type>
         <Name>Docker.RemoteImage</Name>
         <Members>
             <ScriptProperty>
