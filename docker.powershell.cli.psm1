@@ -1485,7 +1485,7 @@ function Get-DockerVersion {
     process {
         Invoke-Docker version --format '{{ json . }}' -Context $Context | ForEach-Object {
             $pso = $_ | ConvertFrom-Json
-            $pso.PSTypeNames.Insert(0, 'Docker.Version')
+            $pso.PSTypeNames.Insert(0, 'Docker.DockerVersion')
             $pso.Client.PSTypeNames.Insert(0, 'Docker.ClientVersion')
             $pso.Server.PSTypeNames.Insert(0, 'Docker.ServerVersion')
             $ModuleVersionInfo = [pscustomobject]@{

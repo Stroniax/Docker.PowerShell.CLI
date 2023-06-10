@@ -1,5 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+    <Controls>
+        <Control>
+            <Name>PSStyle.Formatting.TableHeader</Name>
+            <CustomControl>
+                <CustomEntries>
+                    <CustomEntry>
+                        <CustomItem>
+                            <ExpressionBinding>
+                                <ScriptBlock>$PSStyle.Formatting.TableHeader</ScriptBlock>
+                            </ExpressionBinding>
+                        </CustomItem>
+                    </CustomEntry>
+                </CustomEntries>
+            </CustomControl>
+        </Control>
+        <Control>
+            <Name>PSStyle.Reset</Name>
+            <CustomControl>
+                <CustomEntries>
+                    <CustomEntry>
+                        <CustomItem>
+                            <ExpressionBinding>
+                                <ScriptBlock>$PSStyle.Reset</ScriptBlock>
+                            </ExpressionBinding>
+                        </CustomItem>
+                    </CustomEntry>
+                </CustomEntries>
+            </CustomControl>
+        </Control>
+        <Control>
+            <Name>ValueHighlight</Name>
+            <CustomControl>
+                <CustomEntries>
+                    <CustomEntry>
+                        <CustomItem>
+                            <ExpressionBinding>
+                                <ScriptBlock>$PSStyle.Foreground.Cyan</ScriptBlock>
+                            </ExpressionBinding>
+                        </CustomItem>
+                    </CustomEntry>
+                </CustomEntries>
+            </CustomControl>
+
+        </Control>
+    </Controls>
     <ViewDefinitions>
         <View>
             <Name>Docker.Image</Name>
@@ -196,6 +241,136 @@
                     </TableRowEntry>
                 </TableRowEntries>
             </TableControl>
+        </View>
+        <View>
+            <Name>Docker.DockerVersion</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.DockerVersion</TypeName>
+            </ViewSelectedBy>
+            <CustomControl>
+                <CustomEntries>
+                    <CustomEntry>
+                        <CustomItem>
+                            <!-- Client (Header) -->
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                            </ExpressionBinding>
+                            <Text>Client:</Text>
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Reset</CustomControlName>
+                            </ExpressionBinding>
+                            <NewLine />
+                            <!-- Client (Value) -->
+                            <Frame>
+                                <LeftIndent>4</LeftIndent>
+                                <CustomItem>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                                    </ExpressionBinding>
+                                    <Text>Version: </Text>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>ValueHighlight</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <ScriptBlock>$_.Client.Version</ScriptBlock>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                </CustomItem>
+                            </Frame>
+                            <NewLine />
+                            <!-- Server (Header) -->
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                            </ExpressionBinding>
+                            <Text>Server:</Text>
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Reset</CustomControlName>
+                            </ExpressionBinding>
+                            <NewLine />
+                            <!-- Server (Value) -->
+                            <Frame>
+                                <LeftIndent>4</LeftIndent>
+                                <CustomItem>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                                    </ExpressionBinding>
+                                    <Text>Version: </Text>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>ValueHighlight</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <ScriptBlock>$_.Server.Version</ScriptBlock>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                </CustomItem>
+                            </Frame>
+                            <NewLine />
+                            <!-- Module (Header) -->
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                            </ExpressionBinding>
+                            <Text>Module:</Text>
+                            <ExpressionBinding>
+                                <CustomControlName>PSStyle.Reset</CustomControlName>
+                            </ExpressionBinding>
+                            <NewLine />
+                            <!-- Module (Value) -->
+                            <Frame>
+                                <LeftIndent>4</LeftIndent>
+                                <CustomItem>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                                    </ExpressionBinding>
+                                    <Text>Version: </Text>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>ValueHighlight</CustomControlName>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <ScriptBlock>$_.Module.Version</ScriptBlock>
+                                    </ExpressionBinding>
+                                    <ExpressionBinding>
+                                        <CustomControlName>PSStyle.Reset</CustomControlName>
+                                    </ExpressionBinding>
+                                    <NewLine />
+                                    <ExpressionBinding>
+                                        <ItemSelectionCondition>
+                                            <ScriptBlock>$_.Module.Prerelease</ScriptBlock>
+                                        </ItemSelectionCondition>
+                                        <CustomControl>
+                                            <CustomEntries>
+                                                <CustomEntry>
+                                                    <CustomItem>
+                                                        <ExpressionBinding>
+                                                            <CustomControlName>PSStyle.Formatting.TableHeader</CustomControlName>
+                                                        </ExpressionBinding>
+                                                        <Text>Prerelease: </Text>
+                                                        <ExpressionBinding>
+                                                            <ScriptBlock>$_.Module.Prerelease</ScriptBlock>
+                                                        </ExpressionBinding>
+                                                    </CustomItem>
+                                                </CustomEntry>
+                                            </CustomEntries>
+                                        </CustomControl>
+                                    </ExpressionBinding>
+                                </CustomItem>
+                            </Frame>
+                        </CustomItem>
+                    </CustomEntry>
+                </CustomEntries>
+            </CustomControl>
         </View>
     </ViewDefinitions>
 </Configuration>
