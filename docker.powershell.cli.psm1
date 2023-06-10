@@ -39,7 +39,7 @@ class DockerContainerCompleter : IArgumentCompleter {
             }
 
             foreach ($Completion in $CompletionText) {
-                $HasUnsafeChar = $Completion.IndexOfAny("`0`n`r`t`v`'`" ".ToCharArray()) -ge 0
+                $HasUnsafeChar = $Completion.IndexOfAny("`0`n`r`t`v`'`"`` ".ToCharArray()) -ge 0
                 $SafeCompletionText = if ($HasUnsafeChar) { "'$Completion'" } else { $Completion }
                 $ListItemText = if ($Completion -eq $Container.Id) { "$Completion (name: $($Container.Names -join ', '))" } else { "$Completion (id: $($Container.Id))" }
 
@@ -112,6 +112,7 @@ class DockerImageCompleter : IArgumentCompleter {
         $Images = Get-DockerImage @ProxyParameters
 
         $CompletionResults = [List[CompletionResult]]::new();
+        $CompletedTags = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         foreach ($Image in $Images) {
             $IsMatch = $Image.Name -like $wc -or $Image.id -like $wc
             if (-not $IsMatch) {
@@ -120,15 +121,24 @@ class DockerImageCompleter : IArgumentCompleter {
 
             if ($parameterName -in 'ImageId', 'Id') {
                 $CompletionText = $Image.Id
+                $ListItemText = "$($Image.Id) ($($Image.Repository))"
+            }
+            # DockerImageCompleter is designed to complete from all images, so we don't
+            # need to worry about filtering the tag down to tags for the specified image.
+            elseif ($parameterName -eq 'Tag') {
+                $CompletionText = $Image.Tag
+                if (!$CompletedTags.Add($CompletionText)) {
+                    continue
+                }
+                $ListItemText = $Image.Tag
             }
             else {
                 $CompletionText = $Image.Repository
+                $ListItemText = "$($Image.Repository) ($($Image.Id))"
             }
-
             
-            $HasUnsafeChar = $CompletionText.IndexOfAny("`0`n`r`t`v`'`" ".ToCharArray()) -ge 0
+            $HasUnsafeChar = $CompletionText.IndexOfAny("`0`n`r`t`v`'`"`` ".ToCharArray()) -ge 0
             $SafeCompletionText = if ($HasUnsafeChar) { "'$CompletionText'" } else { $CompletionText }
-            $ListItemText = if ($CompletionText -eq $Image.Id) { "$CompletionText (name: $($Image.Repository))" } else { "$CompletionText (id: $($Image.Id))" }
 
             $CompletionResults.Add(
                 [CompletionResult]::new(
@@ -446,13 +456,18 @@ function Get-DockerContainer {
 }
 
 function New-DockerContainer {
+    [CmdletBinding(
+        SupportsShouldProcess,
+        PositionalBinding = $false,
+        ConfirmImpact = [ConfirmImpact]::Medium,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand)]
     param(
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, Position = 0)]
         [ArgumentCompleter([DockerImageCompleter])]
         [string]
         $ImageName,
 
-        [Parameter()]
+        [Parameter(Position = 1)]
         [ValidateNotNullOrEmpty()]
         [Alias('ContainerName')]
         [string]
@@ -584,20 +599,29 @@ function New-DockerContainer {
 
         $ArgumentList.Add($ImageName)
 
-        $ContainerId = Invoke-Docker $ArgumentList -Context $Context
+        if (!$PSCmdlet.ShouldProcess(
+            "Creating container '$Name' from image '$ImageName'.",
+            "Create container '$Name' from image '$ImageName'?",
+            "docker $ArgumentList")) {
+            return
+        }
 
-        if ($PassThru) {
-            $PassThruBinding = @{
-                Id = $ContainerId
+        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
+            if ($PassThru) {
+                Get-DockerContainerInternal -Id $_ -Context $Context
             }
-            if ($Context) { $PassThruBinding['Context'] = $Context }
-
-            Get-DockerContainer @PassThruBinding
         }
     }
 }
 
 function Remove-DockerContainer {
+    [CmdletBinding(
+        DefaultParameterSetName = 'Id',
+        SupportsShouldProcess,
+        PositionalBinding = $false,
+        ConfirmImpact = [ConfirmImpact]::Medium,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand
+    )]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
         [Alias('ContainerName')]
@@ -609,7 +633,7 @@ function Remove-DockerContainer {
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
         [Alias('Container', 'ContainerId')]
         [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
+        [string[]]
         $Id,
 
         [Parameter(Mandatory, ParameterSetName = 'Prune')]
@@ -627,14 +651,11 @@ function Remove-DockerContainer {
         $Context
     )
     process {
-        $GetDockerContainer = @{}
-        if ($Name) { $GetDockerContainer['Name'] = $Name }
-        if ($Id) { $GetDockerContainer['Id'] = $Id }
-        if ($Context) { $GetDockerContainer['Context'] = $Context }
-        $Containers = Get-DockerContainer @GetDockerContainer | Where-Object { if ($Id) { $_.Id -eq $Id } else { $true } }
+        $Containers = Get-DockerContainerInternal -Name $Name -Id $Id -Context $Context -EscapeId
 
-        if (!$Containers) {
-            Write-Error "No docker container found for '$Name$Id'." -Category ObjectNotFound
+        if ($Containers.Count -eq 0) {
+            # If no containers, the user input wildcard(s) or an error was reported by internal Get
+            Write-Verbose "No containers to process."
             return
         }
 
@@ -642,12 +663,19 @@ function Remove-DockerContainer {
             'container'
             'rm'
             $Containers.Id
+            if ($Force) { '--force' }
         )
-        if ($Force) {
-            $ArgumentList += '--force'
-        }
 
-        Invoke-Docker @ArgumentList -Context $Context | Out-Null
+        $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
+
+        if (!$PSCmdlet.ShouldProcess(
+            "Removing $ShouldProcessTarget.",
+            "Remove $ShouldProcessTarget?",
+            "docker $ArgumentList"))
+        {
+            return;
+        }
+        Invoke-Docker $ArgumentList -Context $Context | Out-Null
     }
 }
 
@@ -1156,7 +1184,7 @@ function Rename-DockerContainer {
     }
 }
 
-function Read-DockerContainerLog {
+function Get-DockerContainerLog {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
         PositionalBinding = $false,
@@ -1237,11 +1265,37 @@ function Read-DockerContainerLog {
 #endregion Docker Container
 
 #region Docker Image
-
 function Get-DockerImage {
     [Alias('gdi')]
     param(
-        [switch]$All,
+        [Parameter(Position = 0)]
+        [SupportsWildcards()]
+        [Alias('RepositoryName', 'ImageName')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $Name,
+
+        [Parameter(Position = 1)]
+        [SupportsWildcards()]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $Tag,
+
+        [Parameter()]
+        [SupportsWildcards()]
+        [Alias('ImageId')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $Id,
+
+        [Parameter()]
+        [Alias('All')]
+        [switch]$IncludeIntermediateImages,
+
+        [Parameter()]
+        [Alias('Untagged')]
+        [switch]
+        $Dangling,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -1249,20 +1303,53 @@ function Get-DockerImage {
         [string]
         $Context
     )
-    $cl = @(
+
+    $ArgumentList = @(
         'image',
         'list',
         '--no-trunc'
         '--format'
         '{{ json . }}'
+        if ($IncludeIntermediateImages) { '--all' }
+        if ($Dangling) { '--filter'; 'dangling=true' }
     )
 
-    if ($All) {
-        $cl += '--all'
+    $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($n in $Name) {
+        if (![WildcardPattern]::ContainsWildcardCharacters($n)) {
+            [void]$ReportNotMatched.Add($n)
+        }
     }
 
-    Invoke-Docker $cl -Context $Context | ForEach-Object {
+    for ($i = 0; $i -lt $Id.Length; $i++) {
+        if ($id[$i].Length -eq 12 -and ![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
+            $id[$i] = "sha256:$($id[$i])*"
+        }
+
+        if (![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
+            [void]$ReportNotMatched.Add($id[$i])
+        }
+    }
+
+    Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
         $pso = $_ | ConvertFrom-Json
+
+        if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Repository)) {
+            return
+        }
+
+        if (-not (Test-MultipleWildcard -WildcardPattern $Tag -ActualValue $pso.Tag)) {
+            return
+        }
+
+        if (-not (Test-MultipleWildcard -WildcardPattern $Id -ActualValue $pso.Id)) {
+            return
+        }
+
+        [void]$ReportNotMatched.Remove($pso.Id)
+        [void]$ReportNotMatched.Remove($pso.Repository)
+
         $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
         $pso.PSObject.Members.Remove('Labels')
         $pso.PSObject.Members.Add([PSNoteProperty]::new('RawMounts', $pso.Mounts))
@@ -1272,6 +1359,10 @@ function Get-DockerImage {
 
         $pso
     }
+
+    foreach ($Unmatched in $ReportNotMatched) {
+        Write-Error "No image found for '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
+    }    
 }
 
 function Remove-DockerImage {
@@ -1282,7 +1373,7 @@ function Remove-DockerImage {
 
 function New-DockerImage {
     [CmdletBinding()]
-    [Alias('Build-DockerImage')]
+    [Alias('Build-DockerImage', 'ndi', 'bddi')]
     param(
         [Parameter()]
         [string]
@@ -1344,6 +1435,7 @@ function Get-DockerContext {
 }
 
 function Use-DockerContext {
+    [Alias('udx')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
