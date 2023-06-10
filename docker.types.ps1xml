@@ -43,4 +43,27 @@
             </AliasProperty>
         </Members>
     </Type>
+    <Type>
+        <Name>Docker.RemoteImage</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>Attributes</Name>
+                <GetScriptBlock>
+                    @(
+                        $this.Stars
+                        if ($this.Official) { 'O' }
+                        if ($this.Automated) { 'A' }
+                    )
+                </GetScriptBlock>
+            </ScriptProperty>
+            <AliasProperty>
+                <Name>IsAutomated</Name>
+                <ReferencedMemberName>Automated</ReferencedMemberName>
+            </AliasProperty>
+            <AliasProperty>
+                <Name>IsOfficial</Name>
+                <ReferencedMemberName>Official</ReferencedMemberName>
+            </AliasProperty>
+        </Members>
+    </Type>
 </Types>
