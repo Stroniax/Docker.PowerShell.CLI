@@ -78,6 +78,22 @@
         </Members>
     </Type>
     <Type>
+        <Name>Docker.ModuleVersion</Name>
+        <Members>
+            <ScriptMethod>
+                <Name>ToString</Name>
+                <Script>
+                if ($this.PreRelease) {
+                    "$($this.Version)-$($this.PreRelease)"
+                }
+                else {
+                    $this.Version
+                }
+                </Script>
+            </ScriptMethod>
+        </Members>
+    </Type>
+    <Type>
         <Name>Docker.RemoteImage</Name>
         <Members>
             <ScriptProperty>

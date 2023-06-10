@@ -1488,6 +1488,12 @@ function Get-DockerVersion {
             $pso.PSTypeNames.Insert(0, 'Docker.Version')
             $pso.Client.PSTypeNames.Insert(0, 'Docker.ClientVersion')
             $pso.Server.PSTypeNames.Insert(0, 'Docker.ServerVersion')
+            $ModuleVersionInfo = [pscustomobject]@{
+                Version    = $MyInvocation.MyCommand.Module.Version
+                Prerelease = $MyInvocation.MyCommand.Module.PrivateData.PSData.Prerelease
+                PSTypeName = 'Docker.ModuleVersion'
+            }
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('Module', $ModuleVersionInfo))
             $pso
         }
     }
