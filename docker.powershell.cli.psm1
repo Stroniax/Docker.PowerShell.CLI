@@ -389,6 +389,48 @@ function Get-DockerContainerInternal {
     }
 }
 
+function Get-DockerImageInternal {
+    param(
+        [string]$Name,
+
+        [string]$Tag,
+
+        [string[]]$Id,
+
+        [string[]]$FullName,
+
+        [string]$Context,
+
+        [switch]$EscapeId
+    )
+
+    process {
+        $Parameters = @{}
+        if ($Id) {
+            $Parameters['Id'] = $Id | ForEach-Object { 
+                if ($EscapeId) {
+                    [WildcardPattern]::Escape($_)
+                }
+                else {
+                    $_
+                } 
+            }
+        }
+        if ($Name) {
+            $Parameters['Name'] = $Name
+            $Parameters['Tag'] = $Tag
+        }
+        if ($FullName) {
+            $Parameters['FullName'] = $FullName
+        }
+        if ($Context) {
+            $Parameters['Context'] = $Context
+        }
+
+        Get-DockerImage @Parameters
+    }
+}
+
 #endregion Helper Functions
 
 #region Docker Container
@@ -1474,9 +1516,80 @@ function Get-DockerImage {
 }
 
 function Remove-DockerImage {
-    param([Parameter(Mandatory)][string]$ImageName)
-    Write-Debug "docker rmi $ImageName"
-    docker rmi $ImageName
+    [CmdletBinding(
+        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        ConfirmImpact = [ConfirmImpact]::Medium,
+        PositionalBinding = $false,
+        DefaultParameterSetName = 'Id'
+    )]
+    [OutputType([Internal.AutomationNull])]
+    [Alias('rdi')]
+    param(
+        [Parameter(Mandatory, Position = 0, ParameterSetName = 'FullName', ValueFromPipelineByPropertyName)]
+        [SupportsWildcards()]
+        [Alias('Reference')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $FullName,
+
+        [Parameter(Mandatory, ParameterSetName = 'Name')]
+        [Alias('RepositoryName', 'ImageName')]
+        [SupportsWildcards()]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string]
+        $Name,
+
+        [Parameter(Mandatory, ParameterSetName = 'Name')]
+        [SupportsWildcards()]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string]
+        $Tag,
+        
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
+        [Alias('ImageId')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $Id,
+
+        [Parameter()]
+        [switch]
+        $Force,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter([DockerContextCompleter])]
+        [string]
+        $Context
+    )
+    begin {
+        $ArgumentList = [List[string]]::new()
+        $ArgumentList.Add('image')
+        $ArgumentList.Add('remove')
+        if ($Force) {
+            $ArgumentList.Add('--force')
+        }
+    }
+    process {
+        $Images = Get-DockerImageInternal -Name $Name -Tag $Tag -Id $Id -FullName $FullName -Context $Context -EscapeId
+
+        if ($Images.Count -eq 0) {
+            Write-Verbose 'No images to process.'
+        }
+
+        foreach ($Image in $Images) {
+            if ($PSCmdlet.ShouldProcess(
+                    "Removing docker image $($Image.FullName) ($($Image.Id)).",
+                    "Remove docker image $($Image.FullName) ($($Image.Id))?",
+                    "docker image remove $($Image.FullName)"
+                )) {
+                $ArgumentList.Add($Image.FullName)
+            }
+        }
+    }
+    end {
+        Invoke-Docker $ArgumentList -Context $Context
+    }
 }
 
 function Build-DockerImage {
