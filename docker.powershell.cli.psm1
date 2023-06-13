@@ -1523,7 +1523,7 @@ function Remove-DockerImage {
         PositionalBinding = $false,
         DefaultParameterSetName = 'Id'
     )]
-    [OutputType([Internal.AutomationNull])]
+    [OutputType([System.Management.Automation.Internal.AutomationNull])]
     [Alias('rdi')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'FullName', ValueFromPipelineByPropertyName)]
@@ -1659,11 +1659,16 @@ function Build-DockerImage {
         )
 
         # Oh how I wish there were a way to write progress AND get the id of the final image
-        $Id = Invoke-Docker $ArgumentList -Context $Context
-
-        if ($? -and $PassThru) {
-            Get-DockerImage -Id $Id
+        if ($PassThru) {
+            $Id = Invoke-Docker $ArgumentList -Context $Context
+            if ($?) {
+                Get-DockerImage -Id $Id
+            }
         }
+        else {
+            Invoke-Docker $ArgumentList -Context $Context | Write-Debug
+        }
+
     }
 }
 
