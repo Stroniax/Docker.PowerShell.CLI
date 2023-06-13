@@ -326,6 +326,159 @@ function Test-MultipleWildcard {
     }
 }
 
+function Assert-DockerPullJob {
+    [CmdletBinding()]
+    param()
+    process {
+        if ('Docker.PowerShell.CLI.DockerPullJob' -as [type]) {
+            return
+        }
+
+        Add-Type -TypeDefinition @'
+using System;
+using System.Management.Automation;
+using System.Diagnostics;
+
+namespace Docker.PowerShell.CLI {
+    public sealed class DockerPullJob : Job
+    {
+        // Docker process
+        private readonly Process _process;
+        // Previous line of output. If successfully exiting, this line will
+        // contain the image name.
+        private string _lastOutput;
+
+        // Abstract member, does not apply
+        public override string Location
+        {
+            get { return _process.MachineName; }
+        }
+
+        public override string StatusMessage
+        {
+            get
+            {
+                if (_process.HasExited)
+                {
+                    return string.Format("Exited ({0})", _process.ExitCode);
+                }
+                else
+                {
+                    return "Running";
+                }
+            }
+        }
+
+        public override bool HasMoreData
+        {
+            get
+            {
+                return Output.Count > 0
+                    || Error.Count > 0
+                    || Debug.Count > 0;
+            }
+        }
+
+        public override void StopJob()
+        {
+            _process.Kill();
+            SetJobState(JobState.Stopped);
+        }
+
+        public int GetProcessId()
+        {
+            return _process.Id;
+        }
+
+        private static string GetName(string arguments)
+        {
+            return string.Format("docker pull {0}", arguments);
+        }
+
+        public DockerPullJob(string command, string arguments)
+            : base(command, GetName(arguments))
+        {
+            var startInfo = new ProcessStartInfo("docker", arguments);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+
+            _process = new Process();
+            _process.StartInfo = startInfo;
+            _process.EnableRaisingEvents = true;
+            _process.Exited += OnProcessExited;
+            _process.OutputDataReceived += OnOutputDataReceived;
+            _process.ErrorDataReceived += OnErrorDataReceieved;
+
+            SetJobState(JobState.Running);
+
+            _process.Start();
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+        }
+
+        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e == null || e.Data == null)
+            {
+                return;
+            }
+            _lastOutput = e.Data;
+            var record = new DebugRecord(e.Data);;
+            Debug.Add(record);
+        }
+
+        private void OnErrorDataReceieved(object sender, DataReceivedEventArgs e)
+        {
+            if (e == null || e.Data == null)
+            {
+                return;
+            }
+            var exn = new Exception(e.Data);
+            var err = new ErrorRecord(
+                exn,
+                "DockerPullError",
+                ErrorCategory.FromStdErr,
+                null
+            );
+            Error.Add(err);
+        }
+
+        private void OnProcessExited(object sender, EventArgs e)
+        {
+            if (_process.ExitCode == 0)
+            {
+                var image = _lastOutput;
+                var pso = new PSObject(image);
+                Output.Add(pso);
+
+                SetJobState(JobState.Completed);
+            }
+            else
+            {
+                SetJobState(JobState.Failed);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _process.Exited -= OnProcessExited;
+                _process.OutputDataReceived -= OnOutputDataReceived;
+                _process.ErrorDataReceived -= OnErrorDataReceieved;
+
+                _process.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+}
+'@
+    }
+}
+
 # Helper function to get a container by name or id depending on which
 # parameters were passed to the origin function. If the id parameter
 # is passed, it will be escaped so that it does not support wildcard
@@ -2073,6 +2226,128 @@ function Import-DockerImage {
         }
     }
 }
+
+
+function Install-DockerImage {
+    [CmdletBinding(
+        DefaultParameterSetName = 'FullName',
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false,
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
+    )]
+    [OutputType('Docker.Image', ParameterSetName = 'FullName', 'NameTag', 'NameAllTags', 'NameDigest')]
+    [OutputType('Docker.PowerShell.CLI.DockerPullJob', ParameterSetName = 'FullNameJob', 'NameTagJob', 'NameAllTagsJob', 'NameDigestJob')]
+    [Alias('isdi')]
+    param(
+        [Parameter(Position = 0, ParameterSetName = 'FullName')]
+        [Parameter(Position = 0, ParameterSetName = 'FullNameJob')]
+        [string[]]
+        $FullName,
+        
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameTag')]
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameAllTags')]
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameDigest')]
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameTagJob')]
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameAllTagsJob')]
+        [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameDigestJob')]
+        [ValidateScript({ $_ -notmatch '[:@ ]'})]
+        [string]
+        $Name,
+
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTag')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTagJob')]
+        [ValidateScript({ $_ -notmatch '[:@ ]'})]
+        [string]
+        $Tag,
+
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigest')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigestJob')]
+        [ValidateScript({ $_ -match '^(sha256:)?[0-9a-f]+$'})]
+        [string]
+        $Digest,
+
+        [Parameter(Mandatory, ParameterSetName = 'NameAllTags')]
+        [Parameter(Mandatory, ParameterSetName = 'NameAllTagsJob')]
+        [switch]
+        $AllTags,
+
+        [Parameter()]
+        [switch]
+        $DisableContentTrust,
+
+        [Parameter()]
+        [string]
+        $Platform,
+
+        [Parameter()]
+        [switch]
+        $PassThru,
+
+        [Parameter(Mandatory, ParameterSetName = 'FullNameJob')]
+        [Parameter(Mandatory, ParameterSetName = 'NameTagJob')]
+        [Parameter(Mandatory, ParameterSetName = 'NameAllTagsJob')]
+        [Parameter(Mandatory, ParameterSetName = 'NameDigestJob')]
+        [switch]
+        $AsJob,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter([DockerContextCompleter])]
+        [string]
+        $Context
+    )
+    begin {
+        Assert-DockerPullJob
+    }
+    process {
+
+        $ArgumentList = @(
+            'image'
+            'pull'
+            if ($DisableContentTrust) { '--disable-content-trust' }
+            if ($Platform) { '--platform'; $Platform }
+        )
+
+        if ($Name -and $Tag) {
+            $FullName = "${Name}:$Tag"
+        }
+        if ($Name -and $Digest) {
+            $FullName = "$Name@$Digest"
+        }
+
+        foreach ($f in $FullName) {
+            if (!$PSCmdlet.ShouldProcess(
+                    "Installing image '$f'.",
+                    "Install image '$f'?",
+                    "docker $ArgumentList $f"
+                )) {
+                continue
+            }
+            $FullArgumentList = @(
+                $ArgumentList
+                $f
+            )
+
+            if ($AsJob) {
+                $Job = [Docker.PowerShell.CLI.DockerPullJob]::new(
+                    $MyInvocation.Line,
+                    $FullArgumentList
+                )
+
+                $PSCmdlet.JobRepository.Add($Job)
+                $Job
+            }
+            else {
+                Invoke-Docker $FullArgumentList -Context $Context | Tee-Object -Variable DockerOutput | Write-Debug
+
+                if ($? -and $PassThru) {
+                    Get-DockerImage -FullName $DockerOutput[-1]
+                }
+            }
+        }
+    }
+}
 #endregion Docker Image
 
 #region Docker Version
@@ -2080,6 +2355,7 @@ function Get-DockerVersion {
     [CmdletBinding(
         RemotingCapability = [RemotingCapability]::OwnedByCommand
     )]
+    [OutputType('Docker.DockerVersion')]
     param(
         [Parameter()]
         [ValidateNotNullOrEmpty()]
