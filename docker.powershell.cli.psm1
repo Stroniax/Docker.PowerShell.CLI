@@ -209,6 +209,42 @@ class DockerAttachJob : System.Management.Automation.Job {
     }
 }
 
+class AddHostTransformation : ArgumentTransformationAttribute {
+    [object] Transform([EngineIntrinsics]$EngineIntrinsics, [object]$InputData) {
+        if ($InputData -as [Dictionary[string, ipaddress]]) {
+            return $InputData
+        }
+
+        $Dictionary = [Dictionary[string, IPAddress]]::new()
+        # InputData may be a hasthable of valid dns name to IP address
+        if ($InputData -is [hashtable]) {
+            foreach ($Key in $InputData.Keys) {
+                $Dictionary[$Key] = [ipaddress]$InputData[$Key]
+            }
+        }
+        else {
+            foreach ($Item in $InputData) {
+                if ($Item -is [string]) {
+                    $Parts = $Item.Split(':')
+                    if ($Parts.Length -ne 2) {
+                        throw "Invalid host specification '$Item'. Input must be in the form 'hostname:ipaddress'."
+                    }
+                    $Dictionary[$Parts[0]] = [ipaddress]$Parts[1]
+                }
+                else {
+                    try {
+                        $Dictionary.Add($Item)
+                    }
+                    catch {
+                        throw [ArgumentException]::new("Invalid host specification '$Item'. Input must be in the form 'hostname:ipaddress'.", $_.Exception)
+                    }
+                }
+            }
+        }
+        return $Dictionary
+    }
+}
+
 #endregion Classes
 
 #region Helper Functions
@@ -1432,9 +1468,14 @@ function Remove-DockerImage {
     docker rmi $ImageName
 }
 
-function New-DockerImage {
-    [CmdletBinding()]
-    [Alias('Build-DockerImage', 'ndi', 'bddi')]
+function Build-DockerImage {
+    [CmdletBinding(
+        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        ConfirmImpact = [ConfirmImpact]::Medium
+    )]
+    [OutputType('Docker.Image')]
+    [Alias('bddi')]
     param(
         [Parameter()]
         [string]
@@ -1443,7 +1484,10 @@ function New-DockerImage {
         [string]
         $DockerFile = './Dockerfile',
 
-        [Parameter()]
+        # Tags are not mandatory by the docker engine so this argument may be $null,
+        # but personally I always want a tag and if I forget one I'm annoyed at myself.
+        [Parameter(Mandatory)]
+        [AllowNull()]
         [string[]]
         $Tag,
 
@@ -1452,20 +1496,50 @@ function New-DockerImage {
         $NoCache,
 
         [Parameter()]
+        [switch]
+        $Pull,
+
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter([DockerContextCompleter])]
         [string]
-        $Context
+        $Context,
+
+        [Parameter()]
+        [Alias('Dns', 'CustomDns')]
+        [AddHostTransformation()]
+        [Dictionary[string, ipaddress]]
+        $AddHosts,
+
+        [Parameter()]
+        [Alias('BuildArgs')]
+        [hashtable]
+        $Parameters,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
     process {
         $ArgumentList = @(
+            'image'
             'build'
             $Path
             if ($DockerFile) { '--file'; $Dockerfile }
             if ($NoCache) { '--no-cache' }
+            if ($Pull) { '--pull' }
+            if ($Tag) { $Tag | ForEach-Object { '--tag'; $_ } }
+            if ($AddHosts) { $AddHosts.Keys | ForEach-Object { '--add-host'; "${_}:$($AddHosts[$_])" } }
+            if ($Parameters) { $Parameters.Keys | ForEach-Object { '--build-arg'; "${_}=$($Parameters[$_])" } }
+            '--quiet'
         )
 
-        Invoke-Docker $ArgumentList -Context $Context
+        # Oh how I wish there were a way to write progress AND get the id of the final image
+        $Id = Invoke-Docker $ArgumentList -Context $Context
+
+        if ($? -and $PassThru) {
+            Get-DockerImage -Id $Id
+        }
     }
 }
 
