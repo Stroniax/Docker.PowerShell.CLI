@@ -2125,7 +2125,7 @@ function Get-DockerContext {
         $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         foreach ($i in $Context) {
             if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
-                $ReportNotMatched.Add($i)
+                [void]$ReportNotMatched.Add($i)
             }
         }
 
