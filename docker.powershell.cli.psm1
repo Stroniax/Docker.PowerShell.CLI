@@ -1366,13 +1366,13 @@ function Get-DockerImage {
     [OutputType('Docker.Image')]
     [Alias('gdi')]
     param(
-        [Parameter(Position = 0, ParameterSetName = 'Search')]
+        [Parameter(ValueFromPipeline, Position = 0, ParameterSetName = 'Search')]
         [SupportsWildcards()]
         [ArgumentCompleter([DockerImageCompleter])]
         [string[]]
         $InputObject,
 
-        [Parameter(ParameterSetName = 'FullName')]
+        [Parameter(ValueFromPipelineByPropertyName, ParameterSetName = 'FullName')]
         [SupportsWildcards()]
         [Alias('Reference')]
         [ArgumentCompleter([DockerImageCompleter])]
@@ -1392,7 +1392,7 @@ function Get-DockerImage {
         [string[]]
         $Tag,
 
-        [Parameter(ValueFromPipelineByPropertyName, ValueFromPipeline, ParameterSetName = 'Id')]
+        [Parameter(ParameterSetName = 'Id')]
         [SupportsWildcards()]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
@@ -1546,7 +1546,7 @@ function Remove-DockerImage {
         [string]
         $Tag,
         
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
         [string[]]
@@ -1762,7 +1762,7 @@ function Copy-DockerImage {
         $DestinationName,
 
         # Id of the source image
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
         [string]
@@ -1866,7 +1866,7 @@ function Export-DockerImage {
         [string]
         $FullName,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
         [string]
