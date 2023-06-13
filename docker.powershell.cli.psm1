@@ -132,9 +132,13 @@ class DockerImageCompleter : IArgumentCompleter {
                 }
                 $ListItemText = $Image.Tag
             }
-            else {
+            elseif ($parameterName -in 'Repository', 'Name', 'ImageName', 'RepositoryName') {
                 $CompletionText = $Image.Repository
                 $ListItemText = "$($Image.Repository) ($($Image.Id))"
+            }
+            else {
+                $CompletionText = $Image.FullName
+                $ListItemText = "$($Image.FullName) ($($Image.Id))"
             }
             
             $HasUnsafeChar = $CompletionText.IndexOfAny("`0`n`r`t`v`'`"`` ".ToCharArray()) -ge 0
@@ -234,7 +238,7 @@ function Invoke-Docker {
 
 function ConvertTo-DockerWildcard {
     param(
-        [Parameter()]
+        [Parameter(ValueFromPipeline)]
         [string]
         $Expression
     )
@@ -1265,22 +1269,41 @@ function Get-DockerContainerLog {
 
 #region Docker Image
 function Get-DockerImage {
+    [CmdletBinding(
+        DefaultParameterSetName = 'Search',
+        PositionalBinding = $false,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand
+    )]
+    [OutputType('Docker.Image')]
     [Alias('gdi')]
     param(
-        [Parameter(Position = 0)]
+        [Parameter(Position = 0, ParameterSetName = 'Search')]
+        [SupportsWildcards()]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $InputObject,
+
+        [Parameter(ParameterSetName = 'FullName')]
+        [SupportsWildcards()]
+        [Alias('Reference')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $FullName,
+
+        [Parameter(Position = 0, ParameterSetName = 'Name')]
         [SupportsWildcards()]
         [Alias('RepositoryName', 'ImageName')]
         [ArgumentCompleter([DockerImageCompleter])]
         [string[]]
         $Name,
 
-        [Parameter(Position = 1)]
+        [Parameter(Position = 1, ParameterSetName = 'Name')]
         [SupportsWildcards()]
         [ArgumentCompleter([DockerImageCompleter])]
         [string[]]
         $Tag,
 
-        [Parameter()]
+        [Parameter(ValueFromPipelineByPropertyName, ValueFromPipeline, ParameterSetName = 'Id')]
         [SupportsWildcards()]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
@@ -1303,7 +1326,7 @@ function Get-DockerImage {
         $Context
     )
 
-    $ArgumentList = @(
+    [List[string]]$ArgumentList = @(
         'image',
         'list',
         '--no-trunc'
@@ -1313,19 +1336,52 @@ function Get-DockerImage {
         if ($Dangling) { '--filter'; 'dangling=true' }
     )
 
+    # Track unmatched filters
     $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
-    foreach ($n in $Name) {
-        if (![WildcardPattern]::ContainsWildcardCharacters($n)) {
-            [void]$ReportNotMatched.Add($n)
+    foreach ($_ in $InputObject) {
+        if ($_ -match '^[0-9a-f]{12}$' -or $_ -match '^sha256:[0-9a-f]64$') {
+            $Id += $_
+        }
+        elseif ($_.Contains(':')) {
+            $FullName += $_
+        }
+        else {
+            $Name += $_
+        }
+    }
+    
+    foreach ($i in $FullName) {
+        $ArgumentList += '--filter'
+        $ArgumentList += "reference=$i"
+        if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+            [void]$ReportNotMatched.Add($i)
+        }
+    }
+    if ($Tag.Count -in @(0, 1) -and $Name.Count -gt 0) {
+        $TagPattern = if ($Tag) { $Tag } else { '*' }
+        $Name | ForEach-Object {
+            $ArgumentList += '--filter'
+            $ArgumentList += "reference=${_}:$TagPattern"
+        }
+    }
+
+    foreach ($i in $Name) {
+        if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+            [void]$ReportNotMatched.Add($i)
         }
     }
 
     for ($i = 0; $i -lt $Id.Length; $i++) {
+        # a 12-character hex string is the default displayed image id
+        # is not the actual image's id but a pattern for it: handle
+        # such appropriately
+    
         if ($id[$i].Length -eq 12 -and ![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
             $id[$i] = "sha256:$($id[$i])*"
         }
 
+        # Track unmatched filters
         if (![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
             [void]$ReportNotMatched.Add($id[$i])
         }
@@ -1346,8 +1402,13 @@ function Get-DockerImage {
             return
         }
 
+        if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue "$($pso.Repository):$($pso.Tag)")) {
+            return
+        }
+
         [void]$ReportNotMatched.Remove($pso.Id)
         [void]$ReportNotMatched.Remove($pso.Repository)
+        [void]$ReportNotMatched.Remove(($pso.Repository + ':' + $pso.Tag))
 
         $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
         $pso.PSObject.Members.Remove('Labels')
@@ -1359,8 +1420,9 @@ function Get-DockerImage {
         $pso
     }
 
+    $UnmatchedMember = $PSCmdlet.ParameterSetName
     foreach ($Unmatched in $ReportNotMatched) {
-        Write-Error "No image found for '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
+        Write-Error "No image found for $UnmatchedMember '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
     }    
 }
 

@@ -25,6 +25,14 @@
                 <Name>Name</Name>
                 <ReferencedMemberName>Repository</ReferencedMemberName>
             </AliasProperty>
+            <ScriptProperty>
+                <Name>FullName</Name>
+                <GetScriptBlock>$this.Repository + ':' + $this.Tag</GetScriptBlock>
+            </ScriptProperty>
+            <AliasProperty>
+                <Name>Reference</Name>
+                <ReferencedMemberName>FullName</ReferencedMemberName>
+            </AliasProperty>
         </Members>
     </Type>
     <Type>
