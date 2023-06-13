@@ -27,7 +27,14 @@
             </AliasProperty>
             <ScriptProperty>
                 <Name>FullName</Name>
-                <GetScriptBlock>$this.Repository + ':' + $this.Tag</GetScriptBlock>
+                <GetScriptBlock>
+                if ($this.Repository -eq '&lt;none&gt;') {
+                    $this.Id
+                }
+                else {
+                    $this.Repository + ':' + $this.Tag
+                }
+                </GetScriptBlock>
             </ScriptProperty>
             <AliasProperty>
                 <Name>Reference</Name>

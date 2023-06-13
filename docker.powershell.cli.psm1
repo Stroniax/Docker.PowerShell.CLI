@@ -1499,8 +1499,11 @@ function Get-DockerImage {
         }
 
         foreach ($i in $FullName) {
-            $ArgumentList += '--filter'
-            $ArgumentList += "reference=$i"
+            # it could be an id, probably of a nameless image
+            if (!$i.StartsWith('sha256:')) {
+                $ArgumentList += '--filter'
+                $ArgumentList += "reference=$i"
+            }
             if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
                 [void]$ReportNotMatched.Add($i)
             }
@@ -1549,7 +1552,8 @@ function Get-DockerImage {
                 return
             }
 
-            if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue "$($pso.Repository):$($pso.Tag)")) {
+            $ImageFullName = if ($pso.Repository -eq '<none>') { $pso.Id } else { "$($pso.Repository):$($pso.Tag)" }
+            if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue $ImageFullName)) {
                 return
             }
 
@@ -1647,6 +1651,10 @@ function Remove-DockerImage {
         }
     }
     end {
+        if ($ArgumentList.Count -eq 2) {
+            # no images
+            return
+        }
         Invoke-Docker $ArgumentList -Context $Context
     }
 }
