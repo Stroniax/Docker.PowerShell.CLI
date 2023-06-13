@@ -148,7 +148,7 @@ class DockerImageCompleter : IArgumentCompleter {
                 $CompletionText = $Image.FullName
                 $ListItemText = "$($Image.FullName) ($($Image.Id))"
             }
-            
+
             $HasUnsafeChar = $CompletionText.IndexOfAny("`0`n`r`t`v`'`"`` ".ToCharArray()) -ge 0
             $SafeCompletionText = if ($HasUnsafeChar) { "'$CompletionText'" } else { $CompletionText }
 
@@ -287,7 +287,7 @@ function ConvertTo-DockerWildcard {
         $Expression
     )
     process {
-        $Expression -split '(?<!`)\*' | ForEach-Object { 
+        $Expression -split '(?<!`)\*' | ForEach-Object {
             if ($_) {
                 $_ -replace '`\*', '*'
             }
@@ -369,13 +369,13 @@ function Get-DockerContainerInternal {
     process {
         $Parameters = @{}
         if ($Id) {
-            $Parameters['Id'] = $Id | ForEach-Object { 
+            $Parameters['Id'] = $Id | ForEach-Object {
                 if ($EscapeId) {
                     [WildcardPattern]::Escape($_)
                 }
                 else {
                     $_
-                } 
+                }
             }
         }
         if ($Name) {
@@ -407,13 +407,13 @@ function Get-DockerImageInternal {
     process {
         $Parameters = @{}
         if ($Id) {
-            $Parameters['Id'] = $Id | ForEach-Object { 
+            $Parameters['Id'] = $Id | ForEach-Object {
                 if ($EscapeId) {
                     [WildcardPattern]::Escape($_)
                 }
                 else {
                     $_
-                } 
+                }
             }
         }
         if ($Name) {
@@ -844,7 +844,7 @@ function Start-DockerContainer {
             Write-Verbose 'No containers to process.'
             return
         }
-        
+
         $ArgumentList = @(
             'container',
             'start'
@@ -855,7 +855,7 @@ function Start-DockerContainer {
             $ArgumentList += '--attach'
             $ArgumentList += '--interactive'
         }
-        
+
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
         if (!$PSCmdlet.ShouldProcess(
                 "Starting $ShouldProcessTarget.",
@@ -868,7 +868,7 @@ function Start-DockerContainer {
         Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
             if ($PassThru) {
                 Get-DockerContainerInternal -Id $_ -Context $Context
-            } 
+            }
         }
     }
 }
@@ -1018,7 +1018,7 @@ function Restart-DockerContainer {
         Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
             if ($PassThru) {
                 Get-DockerContainerInternal -Id $_ -Context $Context
-            } 
+            }
         }
     }
 }
@@ -1551,7 +1551,7 @@ function Remove-DockerImage {
         [ArgumentCompleter([DockerImageCompleter])]
         [string]
         $Tag,
-        
+
         [Parameter(Mandatory, ParameterSetName = 'Id')]
         [Alias('ImageId')]
         [ArgumentCompleter([DockerImageCompleter])]
@@ -1808,7 +1808,7 @@ function Copy-DockerImage {
     }
     process {
         $Images = Get-DockerImageInternal -Id $Id -FullName $FullName -EscapeId -Context $Context | Sort-Object -Property Id -Unique
-        
+
         # Handle no images
         if ($Images.Count -eq 0) {
             Write-Verbose 'No images to process.'
