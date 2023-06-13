@@ -281,6 +281,7 @@ function Invoke-Docker {
 }
 
 function ConvertTo-DockerWildcard {
+    [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline)]
         [string]
@@ -296,9 +297,15 @@ function ConvertTo-DockerWildcard {
 }
 
 function Test-MultipleWildcard {
+    [CmdletBinding()]
     param(
-        [string[]]$WildcardPattern,
-        [string[]]$ActualValue
+        [Parameter()]
+        [string[]]
+        $WildcardPattern,
+
+        [Parameter()]
+        [string[]]
+        $ActualValue
     )
     process {
         if (!$WildcardPattern) {
@@ -326,14 +333,23 @@ function Test-MultipleWildcard {
 # is found or if no containers are found and the allow none switch is
 # not specified.
 function Get-DockerContainerSingle {
+    [CmdletBinding()]
     param(
-        [string]$Name,
+        [Parameter()]
+        [string]
+        $Name,
 
-        [string]$Id,
+        [Parameter()]
+        [string]
+        $Id,
 
-        [string]$Context,
+        [Parameter()]
+        [string]
+        $Context,
 
-        [switch]$AllowNone
+        [Parameter()]
+        [switch]
+        $AllowNone
     )
     process {
         $Containers = Get-DockerContainerInternal -Name $Name -Id $Id -Context $Context -EscapeId
@@ -356,14 +372,23 @@ function Get-DockerContainerSingle {
 # parameters were passed to the origin function. This can also escape
 # the id parameter so that it does not support wildcard patterns.
 function Get-DockerContainerInternal {
+    [CmdletBinding()]
     param(
-        [string[]]$Name,
+        [Parameter()]
+        [string[]]
+        $Name,
 
-        [string[]]$Id,
+        [Parameter()]
+        [string[]]
+        $Id,
 
-        [string]$Context,
+        [Parameter()]
+        [string]
+        $Context,
 
-        [switch]$EscapeId
+        [Parameter()]
+        [switch]
+        $EscapeId
     )
 
     process {
@@ -390,18 +415,31 @@ function Get-DockerContainerInternal {
 }
 
 function Get-DockerImageInternal {
+    [CmdletBinding()]
     param(
-        [string]$Name,
+        [Parameter()]
+        [string]
+        $Name,
 
-        [string]$Tag,
+        [Parameter()]
+        [string]
+        $Tag,
 
-        [string[]]$Id,
+        [Parameter()]
+        [string[]]
+        $Id,
 
-        [string[]]$FullName,
+        [Parameter()]
+        [string[]]
+        $FullName,
 
-        [string]$Context,
+        [Parameter()]
+        [string]
+        $Context,
 
-        [switch]$EscapeId
+        [Parameter()]
+        [switch]
+        $EscapeId
     )
 
     process {
@@ -1538,11 +1576,11 @@ function Get-DockerImage {
 
 function Remove-DockerImage {
     [CmdletBinding(
-        SupportsShouldProcess,
+        DefaultParameterSetName = 'Id',
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
-        ConfirmImpact = [ConfirmImpact]::Medium,
         PositionalBinding = $false,
-        DefaultParameterSetName = 'Id'
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
     )]
     [OutputType([System.Management.Automation.Internal.AutomationNull])]
     [Alias('rdi')]
@@ -1626,6 +1664,7 @@ function Build-DockerImage {
         [string]
         $Path = '.',
 
+        [Parameter()]
         [string]
         $DockerFile = './Dockerfile',
 
@@ -1872,6 +1911,7 @@ function Copy-DockerImage {
 
 function Export-DockerImage {
     [CmdletBinding(
+        DefaultParameterSetName = 'FullName',
         SupportsShouldProcess,
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
         ConfirmImpact = [ConfirmImpact]::Low,
@@ -1995,31 +2035,52 @@ function Get-DockerVersion {
 
 #region Docker Context
 function Get-DockerContext {
+    [CmdletBinding(
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false
+    )]
     [Alias('gdcx')]
     param(
-        [Parameter()]
+        [Parameter(Position = 0)]
         [ValidateNotNullOrEmpty()]
         [SupportsWildcards()]
+        [Alias('Name')]
         [ArgumentCompleter([DockerContextCompleter])]
-        [string]
-        $Context = '*'
+        [string[]]
+        $Context
     )
     process {
+        $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($i in $Context) {
+            if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+                $ReportNotMatched.Add($i)
+            }
+        }
+
         Invoke-Docker context list --format '{{ json . }}' | ForEach-Object {
             $pso = $_ | ConvertFrom-Json
 
-            if ($pso.Name -notlike $Context) {
+            if (-not (Test-MultipleWildcard -WildcardPattern $Context -ActualValue $pso.Name)) {
                 return
             }
 
+            $ReportNotMatched.Remove($pso.Name)
             $pso.PSTypeNames.Insert(0, 'Docker.Context')
             $pso
+        }
+
+        foreach ($Unmatched in $ReportNotMatched) {
+            Write-Error "No context found with name '$Unmatched'." -Category ObjectNotFound -ErrorId 'ContextNotFound' -TargetObject $Unmatched
         }
     }
 }
 
 function Use-DockerContext {
-    [Alias('udx')]
+    [CmdletBinding(
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false
+    )]
+    [Alias('udcx')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
@@ -2029,7 +2090,7 @@ function Use-DockerContext {
         [string]
         $Name,
 
-        [Parameter()]
+        [Parameter(Position = 1)]
         [ValidateNotNull()]
         [ScriptBlock]
         $ScriptBlock
@@ -2054,6 +2115,9 @@ function Use-DockerContext {
 
 #region Miscellaneous Commands
 function Invoke-DockerCommand {
+    [CmdletBinding(
+        RemotingCapability = [RemotingCapability]::OwnedByCommand
+    )]
     param(
         [Parameter(Mandatory)]
         [ArgumentCompleter([DockerContainerCompleter])]

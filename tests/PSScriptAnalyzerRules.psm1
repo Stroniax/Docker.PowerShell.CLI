@@ -532,6 +532,10 @@ function Test-HasParameterAttribute {
         $ParameterAst
     )
     process {
+        if ($ParameterAst.Parent.Parent -is [System.Management.Automation.Language.FunctionMemberAst]) {
+            return
+        }
+
         $Attributes = $ParameterAst.Attributes
         foreach ($Attribute in $Attributes) {
             $AttributeType = $Attribute.TypeName.GetReflectionType()
