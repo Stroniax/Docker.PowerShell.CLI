@@ -471,80 +471,82 @@ function Get-DockerContainer {
         [string]
         $Context
     )
-    [List[string]]$cl = @(
-        'container'
-        'list'
-        '--no-trunc'
-        '--format'
-        '{{ json . }}'
-        '--all'
-    )
+    process {
+        [List[string]]$cl = @(
+            'container'
+            'list'
+            '--no-trunc'
+            '--format'
+            '{{ json . }}'
+            '--all'
+        )
 
-    $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
-    foreach ($s in $Status) {
-        $cl.Add('--filter')
-        $cl.Add("status=$($s.ToLower())")
-    }
-
-    foreach ($n in $Name) {
-        if (![WildcardPattern]::ContainsWildcardCharacters($n)) {
-            [void]$ReportNotMatched.Add($n)
-        }
-        foreach ($w in ConvertTo-DockerWildcard $n) {
+        foreach ($s in $Status) {
             $cl.Add('--filter')
-            $cl.Add("name=$w")
-        }
-    }
-
-    foreach ($l in $Label) {
-        # Label filter does not support partial match
-        if (![WildcardPattern]::ContainsWildcardCharacters($l)) {
-            $cl.Add('--filter')
-            $cl.Add("label=$w")
-        }
-    }
-
-    foreach ($i in $Id) {
-        if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
-            [void]$ReportNotMatched.Add($i)
-        }
-        foreach ($w in ConvertTo-DockerWildcard $i) {
-            $cl.Add('--filter')
-            $cl.Add("id=$w")
-        }
-    }
-
-
-    Invoke-Docker $cl -Context $Context | ForEach-Object {
-        $pso = $_ | ConvertFrom-Json
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('RawNames', $pso.Names))
-        $pso.PSObject.Members.Remove('Names')
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
-        $pso.PSObject.Members.Remove('Labels')
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
-        $pso.PSTypeNames.Insert(0, 'Docker.Container')
-
-        if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Names)) {
-            return
-        }
-        if (-not (Test-MultipleWildcard -WildcardPattern $Id -ActualValue $pso.Id)) {
-            return
-        }
-        if (-not (Test-MultipleWildcard -WildcardPattern $Label -ActualValue $pso.Labels)) {
-            return
+            $cl.Add("status=$($s.ToLower())")
         }
 
-        $ToRemove = if ($PSCmdlet.ParameterSetName -eq 'Id') { $pso.Id } else { $pso.Names }
-        foreach ($removable in $ToRemove) {
-            [void]$ReportNotMatched.Remove($removable)
+        foreach ($n in $Name) {
+            if (![WildcardPattern]::ContainsWildcardCharacters($n)) {
+                [void]$ReportNotMatched.Add($n)
+            }
+            foreach ($w in ConvertTo-DockerWildcard $n) {
+                $cl.Add('--filter')
+                $cl.Add("name=$w")
+            }
         }
 
-        $pso
-    }
+        foreach ($l in $Label) {
+            # Label filter does not support partial match
+            if (![WildcardPattern]::ContainsWildcardCharacters($l)) {
+                $cl.Add('--filter')
+                $cl.Add("label=$w")
+            }
+        }
 
-    foreach ($r in $ReportNotMatched) {
-        Write-Error "No container found for '$r'." -Category ObjectNotFound -ErrorId 'ContainerNotFound' -TargetObject $r
+        foreach ($i in $Id) {
+            if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+                [void]$ReportNotMatched.Add($i)
+            }
+            foreach ($w in ConvertTo-DockerWildcard $i) {
+                $cl.Add('--filter')
+                $cl.Add("id=$w")
+            }
+        }
+
+
+        Invoke-Docker $cl -Context $Context | ForEach-Object {
+            $pso = $_ | ConvertFrom-Json
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawNames', $pso.Names))
+            $pso.PSObject.Members.Remove('Names')
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
+            $pso.PSObject.Members.Remove('Labels')
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
+            $pso.PSTypeNames.Insert(0, 'Docker.Container')
+
+            if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Names)) {
+                return
+            }
+            if (-not (Test-MultipleWildcard -WildcardPattern $Id -ActualValue $pso.Id)) {
+                return
+            }
+            if (-not (Test-MultipleWildcard -WildcardPattern $Label -ActualValue $pso.Labels)) {
+                return
+            }
+
+            $ToRemove = if ($PSCmdlet.ParameterSetName -eq 'Id') { $pso.Id } else { $pso.Names }
+            foreach ($removable in $ToRemove) {
+                [void]$ReportNotMatched.Remove($removable)
+            }
+
+            $pso
+        }
+
+        foreach ($r in $ReportNotMatched) {
+            Write-Error "No container found for '$r'." -Category ObjectNotFound -ErrorId 'ContainerNotFound' -TargetObject $r
+        }
     }
 }
 
@@ -1054,33 +1056,34 @@ function Suspend-DockerContainer {
         [string]
         $Context
     )
+    process {
+        $Containers = Get-DockerContainerInternal -Id $Id -Name $Name -Context $Context -EscapeId
 
-    $Containers = Get-DockerContainerInternal -Id $Id -Name $Name -Context $Context -EscapeId
+        if ($Containers.Count -eq 0) {
+            # If no containers, the user input wildcard(s) or an error was reported by internal Get
+            Write-Verbose 'No containers to process.'
+            return
+        }
 
-    if ($Containers.Count -eq 0) {
-        # If no containers, the user input wildcard(s) or an error was reported by internal Get
-        Write-Verbose 'No containers to process.'
-        return
-    }
+        if ($Containers.Count -gt 1) {
+            $ContainerIdentification = "$($Containers.Count) containers"
+        }
+        else {
+            $ContainerIdentification = "container $($Containers.Id) ($($Containers.Names))"
+        }
 
-    if ($Containers.Count -gt 1) {
-        $ContainerIdentification = "$($Containers.Count) containers"
-    }
-    else {
-        $ContainerIdentification = "container $($Containers.Id) ($($Containers.Names))"
-    }
+        if (!$PSCmdlet.ShouldProcess(
+                "Pausing all processes in $ContainerIdentification.",
+                "Pause all processes in $ContainerIdentification?",
+                "docker $ArgumentList"
+            )) {
+            return
+        }
 
-    if (!$PSCmdlet.ShouldProcess(
-            "Pausing all processes in $ContainerIdentification.",
-            "Pause all processes in $ContainerIdentification?",
-            "docker $ArgumentList"
-        )) {
-        return
-    }
-
-    Invoke-Docker pause $Containers.Id -Context $Context | ForEach-Object {
-        if ($PassThru) {
-            Get-DockerContainerInternal -Id $_ -Context $Context
+        Invoke-Docker pause $Containers.Id -Context $Context | ForEach-Object {
+            if ($PassThru) {
+                Get-DockerContainerInternal -Id $_ -Context $Context
+            }
         }
     }
 }
@@ -1118,34 +1121,35 @@ function Resume-DockerContainer {
         [string]
         $Context
     )
+    process {
+        $Containers = Get-DockerContainerInternal -Id $Id -Name $Name -Context $Context -EscapeId
 
-    $Containers = Get-DockerContainerInternal -Id $Id -Name $Name -Context $Context -EscapeId
+        # Ensure we have containers to process
+        if ($Containers.Count -eq 0) {
+            # If no containers, the user input wildcard(s) or an error was reported by internal Get
+            Write-Verbose 'No containers to process.'
+            return
+        }
 
-    # Ensure we have containers to process
-    if ($Containers.Count -eq 0) {
-        # If no containers, the user input wildcard(s) or an error was reported by internal Get
-        Write-Verbose 'No containers to process.'
-        return
-    }
+        if ($Containers.Count -gt 1) {
+            $ContainerIdentification = "$($Containers.Count) containers"
+        }
+        else {
+            $ContainerIdentification = "container $($Containers.Id) ($($Containers.Names))"
+        }
 
-    if ($Containers.Count -gt 1) {
-        $ContainerIdentification = "$($Containers.Count) containers"
-    }
-    else {
-        $ContainerIdentification = "container $($Containers.Id) ($($Containers.Names))"
-    }
+        if (!$PSCmdlet.ShouldProcess(
+                "Unpausing all processes in $ContainerIdentification.",
+                "Unpause all processes in $ContainerIdentification?",
+                "docker $ArgumentList"
+            )) {
+            return
+        }
 
-    if (!$PSCmdlet.ShouldProcess(
-            "Unpausing all processes in $ContainerIdentification.",
-            "Unpause all processes in $ContainerIdentification?",
-            "docker $ArgumentList"
-        )) {
-        return
-    }
-
-    Invoke-Docker unpause $Containers.Id -Context $Context | ForEach-Object {
-        if ($PassThru) {
-            Get-DockerContainerInternal -Id $_ -Context $Context
+        Invoke-Docker unpause $Containers.Id -Context $Context | ForEach-Object {
+            if ($PassThru) {
+                Get-DockerContainerInternal -Id $_ -Context $Context
+            }
         }
     }
 }
@@ -1319,39 +1323,40 @@ function Get-DockerContainerLog {
         [string]
         $Context
     )
+    process {
+        $Container = Get-DockerContainerSingle -Name $Name -Id $Id -Context $Context
+        if (!$?) { return }
 
-    $Container = Get-DockerContainerSingle -Name $Name -Id $Id -Context $Context
-    if (!$?) { return }
+        $ArgumentList = @(
+            'container'
+            'logs'
+            $Container.Id
+            '--timestamps'
+            '--details'
+        )
 
-    $ArgumentList = @(
-        'container'
-        'logs'
-        $Container.Id
-        '--timestamps'
-        '--details'
-    )
+        if ($Follow) {
+            $ArgumentList += '--follow'
+        }
 
-    if ($Follow) {
-        $ArgumentList += '--follow'
+        if ($Last) {
+            $ArgumentList += '--tail'
+            $ArgumentList += $Last
+        }
+
+        if ($Since) {
+            $ArgumentList += '--since'
+            $ArgumentList += $Since.ToString('yyyy-MM-ddTHH:mm:ss')
+        }
+
+        if ($Until) {
+            $ArgumentList += '--until'
+            $ArgumentList += $Until.ToString('yyyy-MM-ddTHH:mm:ss')
+        }
+
+        Write-Debug "$ArgumentList"
+        Invoke-Docker $ArgumentList -Context $Context
     }
-
-    if ($Last) {
-        $ArgumentList += '--tail'
-        $ArgumentList += $Last
-    }
-
-    if ($Since) {
-        $ArgumentList += '--since'
-        $ArgumentList += $Since.ToString('yyyy-MM-ddTHH:mm:ss')
-    }
-
-    if ($Until) {
-        $ArgumentList += '--until'
-        $ArgumentList += $Until.ToString('yyyy-MM-ddTHH:mm:ss')
-    }
-
-    Write-Debug "$ArgumentList"
-    Invoke-Docker $ArgumentList -Context $Context
 }
 
 #endregion Docker Container
@@ -1414,105 +1419,106 @@ function Get-DockerImage {
         [string]
         $Context
     )
-
-    [List[string]]$ArgumentList = @(
-        'image',
-        'list',
-        '--no-trunc'
-        '--format'
-        '{{ json . }}'
-        if ($IncludeIntermediateImages) { '--all' }
-        if ($Dangling) { '--filter'; 'dangling=true' }
-    )
-
-    # Track unmatched filters
-    $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-
-    foreach ($_ in $InputObject) {
-        if ($_ -match '^[0-9a-f]{12}$' -or $_ -match '^sha256:[0-9a-f]64$') {
-            $Id += $_
-        }
-        elseif ($_.Contains(':')) {
-            $FullName += $_
-        }
-        else {
-            $Name += $_
-        }
-    }
-    
-    foreach ($i in $FullName) {
-        $ArgumentList += '--filter'
-        $ArgumentList += "reference=$i"
-        if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
-            [void]$ReportNotMatched.Add($i)
-        }
-    }
-    if ($Tag.Count -in @(0, 1) -and $Name.Count -gt 0) {
-        $TagPattern = if ($Tag) { $Tag } else { '*' }
-        $Name | ForEach-Object {
-            $ArgumentList += '--filter'
-            $ArgumentList += "reference=${_}:$TagPattern"
-        }
-    }
-
-    foreach ($i in $Name) {
-        if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
-            [void]$ReportNotMatched.Add($i)
-        }
-    }
-
-    for ($i = 0; $i -lt $Id.Length; $i++) {
-        # a 12-character hex string is the default displayed image id
-        # is not the actual image's id but a pattern for it: handle
-        # such appropriately
-    
-        if ($id[$i].Length -eq 12 -and ![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
-            $id[$i] = "sha256:$($id[$i])*"
-        }
+    process {
+        [List[string]]$ArgumentList = @(
+            'image',
+            'list',
+            '--no-trunc'
+            '--format'
+            '{{ json . }}'
+            if ($IncludeIntermediateImages) { '--all' }
+            if ($Dangling) { '--filter'; 'dangling=true' }
+        )
 
         # Track unmatched filters
-        if (![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
-            [void]$ReportNotMatched.Add($id[$i])
+        $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+        foreach ($_ in $InputObject) {
+            if ($_ -match '^[0-9a-f]{12}$' -or $_ -match '^sha256:[0-9a-f]64$') {
+                $Id += $_
+            }
+            elseif ($_.Contains(':')) {
+                $FullName += $_
+            }
+            else {
+                $Name += $_
+            }
+        }
+
+        foreach ($i in $FullName) {
+            $ArgumentList += '--filter'
+            $ArgumentList += "reference=$i"
+            if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+                [void]$ReportNotMatched.Add($i)
+            }
+        }
+        if ($Tag.Count -in @(0, 1) -and $Name.Count -gt 0) {
+            $TagPattern = if ($Tag) { $Tag } else { '*' }
+            $Name | ForEach-Object {
+                $ArgumentList += '--filter'
+                $ArgumentList += "reference=${_}:$TagPattern"
+            }
+        }
+
+        foreach ($i in $Name) {
+            if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
+                [void]$ReportNotMatched.Add($i)
+            }
+        }
+
+        for ($i = 0; $i -lt $Id.Length; $i++) {
+            # a 12-character hex string is the default displayed image id
+            # is not the actual image's id but a pattern for it: handle
+            # such appropriately
+
+            if ($id[$i].Length -eq 12 -and ![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
+                $id[$i] = "sha256:$($id[$i])*"
+            }
+
+            # Track unmatched filters
+            if (![WildcardPattern]::ContainsWildcardCharacters($id[$i])) {
+                [void]$ReportNotMatched.Add($id[$i])
+            }
+        }
+
+        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
+            $pso = $_ | ConvertFrom-Json
+
+            if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Repository)) {
+                return
+            }
+
+            if (-not (Test-MultipleWildcard -WildcardPattern $Tag -ActualValue $pso.Tag)) {
+                return
+            }
+
+            if (-not (Test-MultipleWildcard -WildcardPattern $Id -ActualValue $pso.Id)) {
+                return
+            }
+
+            if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue "$($pso.Repository):$($pso.Tag)")) {
+                return
+            }
+
+            [void]$ReportNotMatched.Remove($pso.Id)
+            [void]$ReportNotMatched.Remove($pso.Repository)
+            [void]$ReportNotMatched.Remove(($pso.Repository + ':' + $pso.Tag))
+
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
+            $pso.PSObject.Members.Remove('Labels')
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawMounts', $pso.Mounts))
+            $pso.PSObject.Members.Remove('Mounts')
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
+            $pso.PSTypeNames.Insert(0, 'Docker.Image')
+
+            $pso
+        }
+
+        $UnmatchedMember = $PSCmdlet.ParameterSetName
+        foreach ($Unmatched in $ReportNotMatched) {
+            Write-Error "No image found for $UnmatchedMember '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
         }
     }
-
-    Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
-        $pso = $_ | ConvertFrom-Json
-
-        if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Repository)) {
-            return
-        }
-
-        if (-not (Test-MultipleWildcard -WildcardPattern $Tag -ActualValue $pso.Tag)) {
-            return
-        }
-
-        if (-not (Test-MultipleWildcard -WildcardPattern $Id -ActualValue $pso.Id)) {
-            return
-        }
-
-        if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue "$($pso.Repository):$($pso.Tag)")) {
-            return
-        }
-
-        [void]$ReportNotMatched.Remove($pso.Id)
-        [void]$ReportNotMatched.Remove($pso.Repository)
-        [void]$ReportNotMatched.Remove(($pso.Repository + ':' + $pso.Tag))
-
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
-        $pso.PSObject.Members.Remove('Labels')
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('RawMounts', $pso.Mounts))
-        $pso.PSObject.Members.Remove('Mounts')
-        $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
-        $pso.PSTypeNames.Insert(0, 'Docker.Image')
-
-        $pso
-    }
-
-    $UnmatchedMember = $PSCmdlet.ParameterSetName
-    foreach ($Unmatched in $ReportNotMatched) {
-        Write-Error "No image found for $UnmatchedMember '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
-    }    
 }
 
 function Remove-DockerImage {
