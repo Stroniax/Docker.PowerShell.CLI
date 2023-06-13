@@ -732,8 +732,9 @@ function Remove-DockerContainer {
         $Id,
 
         [Parameter(Mandatory, ParameterSetName = 'Prune')]
+        [Alias('Unused', 'Prune')]
         [switch]
-        $Unused,
+        $StoppedContainers,
 
         [Parameter()]
         [switch]
@@ -746,6 +747,20 @@ function Remove-DockerContainer {
         $Context
     )
     process {
+        if ($StoppedContainers) {
+            $ArgumentList = @(
+                'container'
+                'prune'
+                if ($Force) { '--force' }
+            )
+            if ($PSCmdlet.ShouldProcess(
+                    'Removing stopped containers.',
+                    'Remove stopped containers?',
+                    "docker $ArgumentList")) {
+                Invoke-Docker $ArgumentList -Context $Context | Out-Null
+            }
+            return
+        }
         $Containers = Get-DockerContainerInternal -Name $Name -Id $Id -Context $Context -EscapeId
 
         if ($Containers.Count -eq 0) {
