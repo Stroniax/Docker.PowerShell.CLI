@@ -338,6 +338,9 @@ function Get-DockerContainerSingle {
     process {
         $Containers = Get-DockerContainerInternal -Name $Name -Id $Id -Context $Context -EscapeId
 
+        $Message = if ($Name) { "name '$Name'" } else { "id '$Id'" }
+        $TargetObject = if ($Name) { $Name } else { $Id }
+
         if ($Containers.Count -gt 1) {
             Write-Error "More than one container found for $Message." -Category InvalidArgument -ErrorId 'AmbiguousContainer' -TargetObject $TargetObject
         }
@@ -703,7 +706,7 @@ function Remove-DockerContainer {
 
         if ($Containers.Count -eq 0) {
             # If no containers, the user input wildcard(s) or an error was reported by internal Get
-            Write-Verbose "No containers to process."
+            Write-Verbose 'No containers to process.'
             return
         }
 
@@ -794,7 +797,7 @@ function Start-DockerContainer {
 
         if ($Containers.Count -eq 0) {
             # If no containers, the user input wildcard(s) or an error was reported by internal Get
-            Write-Verbose "No containers to process."
+            Write-Verbose 'No containers to process.'
             return
         }
         
@@ -872,7 +875,7 @@ function Stop-DockerContainer {
 
         if ($Containers.Count -eq 0) {
             # If no containers, the user input wildcard(s) or an error was reported by internal Get
-            Write-Verbose "No containers to process."
+            Write-Verbose 'No containers to process.'
             return
         }
 
@@ -945,7 +948,7 @@ function Restart-DockerContainer {
 
         if ($Containers.Count -eq 0) {
             # If no containers, the user input wildcard(s) or an error was reported by internal Get
-            Write-Verbose "No containers to process."
+            Write-Verbose 'No containers to process.'
             return
         }
 
@@ -1014,7 +1017,7 @@ function Suspend-DockerContainer {
 
     if ($Containers.Count -eq 0) {
         # If no containers, the user input wildcard(s) or an error was reported by internal Get
-        Write-Verbose "No containers to process."
+        Write-Verbose 'No containers to process.'
         return
     }
 
@@ -1079,7 +1082,7 @@ function Resume-DockerContainer {
     # Ensure we have containers to process
     if ($Containers.Count -eq 0) {
         # If no containers, the user input wildcard(s) or an error was reported by internal Get
-        Write-Verbose "No containers to process."
+        Write-Verbose 'No containers to process.'
         return
     }
 
