@@ -1,7 +1,7 @@
 using namespace System.Management.Automation
 using namespace System.Collections.Generic
 
-class DockerNetworkAuxAddressConverter : ArgumentTransformationAttribute {
+class DockerNetworkAuxAddressTransformation : ArgumentTransformationAttribute {
     [object] Transform([EngineIntrinsics]$engineIntrinsics, [object]$inputData) {
         $Result = [Dictionary[string, HashSet[IPAddress]]]::new([StringComparer]::OrdinalIgnoreCase)
         if ($inputData -is [object[]]) {

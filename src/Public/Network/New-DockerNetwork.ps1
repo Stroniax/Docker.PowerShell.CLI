@@ -1,6 +1,6 @@
 using module ../../Classes/DockerNetwork.psm1
 using module ../../Classes/DockerNetworkCompleter.psm1
-using module ../../Classes/DockerNetworkAuxAddressConverter.psm1
+using module ../../Classes/DockerNetworkAuxAddressTransformation.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using namespace System.Management.Automation
 using namespace System.Collections.Generic
@@ -70,7 +70,7 @@ function New-DockerNetwork {
 
         [Parameter()]
         [Alias('AuxAddress')]
-        [DockerNetworkAuxAddressConverter()]
+        [DockerNetworkAuxAddressTransformation()]
         [Dictionary[string, HashSet[IPAddress]]]
         $AuxiliaryAddressMapping,
 
