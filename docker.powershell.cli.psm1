@@ -32,29 +32,4 @@ using module src/Classes/ValidateDockerContext.psm1
 #endregion Docker Context
 
 #region Miscellaneous Commands
-function Invoke-DockerCommand {
-    [CmdletBinding(
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
-    )]
-    param(
-        [Parameter(Mandatory)]
-        [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
-        $ContainerName,
-
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]
-        $ArgumentList,
-
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [ArgumentCompleter([DockerContextCompleter])]
-        [string]
-        $Context
-    )
-    $PassArgumentList = [List[string]]::new($ArgumentList)
-    $PassArgumentList.Insert(0, 'exec')
-    $PassArgumentList.Insert(1, $ContainerName)
-    Invoke-Docker $PassArgumentList -Context $Context
-}
 #endregion Miscellaneous Commands
