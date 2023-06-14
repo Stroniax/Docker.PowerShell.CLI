@@ -18,6 +18,10 @@ class DockerContainer {
 
     [DateTimeOffset]$CreatedAt
 
+    [string] ToString() {
+        return $this.Id
+    }
+
     DockerContainer([psobject]$deserializedJson) {
         $this.PSSourceValue = $deserializedJson
         $this.PSObject.TypeNames.Insert(0, 'Docker.Container')

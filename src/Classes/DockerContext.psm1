@@ -16,6 +16,10 @@ class DockerContext {
 
     [string]$StackOrchestrator
 
+    [string] ToString() {
+        return $this.Name
+    }
+
     DockerContext([PSObject]$deserializedJson) {
         $this.PSSourceValue = $deserializedJson
         $this.PSTypeNames.Insert(0, 'Docker.Context')
