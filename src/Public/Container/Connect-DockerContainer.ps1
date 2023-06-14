@@ -1,5 +1,5 @@
-using module ../../src/Classes/DockerContainerCompleter.psm1
-using module ../../src/Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerContainerCompleter.psm1
+using module ../../Classes/DockerContextCompleter.psm1
 
 function Connect-DockerContainer {
     [CmdletBinding()]

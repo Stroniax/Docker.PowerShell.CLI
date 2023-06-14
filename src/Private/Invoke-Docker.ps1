@@ -1,5 +1,5 @@
 using namespace System.Collections;
-using module src/Classes/ValidateDockerContext.psm1
+using module ../Classes/ValidateDockerContext.psm1
 
 function Invoke-Docker {
     [CmdletBinding()]
