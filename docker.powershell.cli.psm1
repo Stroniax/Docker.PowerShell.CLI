@@ -14,29 +14,6 @@ using module src/Classes/DockerBuildAddHostTransformation.psm1
 #endregion Classes
 
 #region Helper Functions
-function Invoke-Docker {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0, ValueFromRemainingArguments)]
-        [string[]]
-        $ArgumentList,
-
-        [Parameter()]
-        [ValidateDockerContext()]
-        [string]
-        $Context
-    )
-
-    process {
-        $List = [List[string]]$ArgumentList
-        if ($Context) {
-            $List.Insert(0, '--context')
-            $List.Insert(1, $Context)
-        }
-        Write-Debug "docker $List"
-        docker $List
-    }
-}
 
 function ConvertTo-DockerWildcard {
     [CmdletBinding()]
