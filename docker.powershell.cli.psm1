@@ -6,20 +6,9 @@ using namespace System.Management.Automation.Language;
 using module ../src/Classes/DockerContainerCompleter.psm1
 using module ../src/Classes/DockerContextCompleter.psm1
 using module ../src/Classes/DockerImageCompleter.psm1
+using module ../src/Classes/ValidateDockerContext.psm1
 
 #region Classes
-
-class ValidateDockerContext : ValidateArgumentsAttribute {
-    [void ]Validate([object]$Context, [EngineIntrinsics]$EngineIntrinsics) {
-        if ($Context -as [string]) {
-            Write-Debug 'docker context list --quiet'
-            $Contexts = docker context list --quiet
-            if ($Contexts -notcontains $Context) {
-                throw "Context '$Context' does not exist"
-            }
-        }
-    }
-}
 
 class DockerAttachJob : System.Management.Automation.Job {
     hidden [System.Diagnostics.Process]$_Process
