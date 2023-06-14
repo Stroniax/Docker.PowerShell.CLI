@@ -8,8 +8,12 @@ class DockerNetworkCompleter : System.Management.Automation.IArgumentCompleter {
     ) {
         $CompletionResults = [System.Collections.Generic.List[System.Management.Automation.CompletionResult]]::new()
 
-        Write-Debug 'docker network list --format {{ json . }}'
-        $networks = docker network list --format '{{ json . }}' | ConvertFrom-Json
+        $DockerNetworkParameters = @{}
+        if ($FakeBoundParameters['Context']) {
+            $DockerNetworkParameters['Context'] = $FakeBoundParameters['Context']
+        }
+        
+        $networks = Get-DockerNetwork @DockerNetworkParameters
 
         foreach ($network in $networks) {
             $IsMatch = $false
