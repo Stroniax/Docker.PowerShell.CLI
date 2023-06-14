@@ -10,45 +10,6 @@ using module ../src/Classes/ValidateDockerContext.psm1
 
 #region Classes
 
-class DockerAttachJob : System.Management.Automation.Job {
-    hidden [System.Diagnostics.Process]$_Process
-    DockerAttachJob([System.Diagnostics.Process]$Process) : base($Process.CommandLine, $Process.Name) {
-        $this._Process = $Process
-        Register-ObjectEvent -InputObject $Process -EventName OutputDataReceived -Action {
-            $this.Output.Add($EventArgs.Data)
-        }
-        Register-ObjectEvent -InputObject $Process -EventName Exited -Action {
-            if ($this._Process.ExitCode -eq 0) {
-                $this.SetJobState([System.Management.Automation.JobState]::Completed)
-            }
-            else {
-                $this.SetJobState([System.Management.Automation.JobState]::Failed)
-            }
-        }
-    }
-
-    hidden [string] get_StatusMessage() {
-        if ($this._Process.HasExited) {
-            return 'Exited'
-        }
-        else {
-            return 'Running'
-        }
-    }
-
-    hidden [bool] get_HasMoreData() {
-        return $this.Output.Count -gt 0
-    }
-
-    hidden [string] get_Location() {
-        return $this._Process.StartInfo.FileName
-    }
-
-    [void] StopJob() {
-        $this._Process.Kill()
-    }
-}
-
 class AddHostTransformation : ArgumentTransformationAttribute {
     [object] Transform([EngineIntrinsics]$EngineIntrinsics, [object]$InputData) {
         if ($InputData -as [Dictionary[string, ipaddress]]) {
