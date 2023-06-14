@@ -3,6 +3,7 @@ using namespace System.Diagnostics;
 using namespace System.Collections.Generic;
 using namespace System.Management.Automation;
 using namespace System.Management.Automation.Language;
+
 class DockerContainerCompleter : IArgumentCompleter {
     [IEnumerable[CompletionResult]] CompleteArgument(
         [string]$commandName,
