@@ -1,5 +1,6 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/BooleanArgumentCompleter.psm1
 
 function Find-DockerImage {
     [CmdletBinding(
@@ -13,11 +14,13 @@ function Find-DockerImage {
 
         [Parameter()]
         [Alias('Automated')]
+        [ArgumentCompleter([BooleanArgumentCompleter])]
         [Nullable[bool]]
         $IsAutomated,
 
         [Parameter()]
         [Alias('Official')]
+        [ArgumentCompleter([BooleanArgumentCompleter])]
         [Nullable[bool]]
         $IsOfficial,
 
