@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using module ../../Classes/ValidateDockerContext.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerContext.psm1
+using module ../../Classes/EmptyScriptBlockArgumentCompleter.psm1
 
 function Use-DockerContext {
     [CmdletBinding(
@@ -23,6 +24,7 @@ function Use-DockerContext {
 
         [Parameter(Mandatory, Position = 1, ParameterSetName = 'ScriptBlock')]
         [ValidateNotNull()]
+        [ArgumentCompleter([EmptyScriptBlockArgumentCompleter])]
         [ScriptBlock]
         $ScriptBlock,
 

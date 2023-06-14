@@ -1,5 +1,6 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
 
 function Install-DockerImage {
     [CmdletBinding(
@@ -15,6 +16,7 @@ function Install-DockerImage {
     param(
         [Parameter(Position = 0, ParameterSetName = 'FullName')]
         [Parameter(Position = 0, ParameterSetName = 'FullNameJob')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $FullName,
         
@@ -24,18 +26,21 @@ function Install-DockerImage {
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameTagJob')]
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameAllTagsJob')]
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameDigestJob')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Name,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTag')]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTagJob')]
         [ValidateScript({ $_ -notmatch '[:@ ]' })]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Tag,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigest')]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigestJob')]
         [ValidateScript({ $_ -match '^(sha256:)?[0-9a-f]+$' })]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Digest,
 
@@ -49,6 +54,7 @@ function Install-DockerImage {
         $DisableContentTrust,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Platform,
 

@@ -3,6 +3,7 @@ using namespace System.Management.Automation
 using module ../../Classes/DockerContainer.psm1
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
 
 function Get-DockerContainer {
     [CmdletBinding(
@@ -32,6 +33,7 @@ function Get-DockerContainer {
         [Parameter(ValueFromPipelineByPropertyName, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
         [SupportsWildcards()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $Label,
 

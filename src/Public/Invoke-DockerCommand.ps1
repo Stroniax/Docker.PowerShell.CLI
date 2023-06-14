@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using namespace System.Collections.Generic
 using module ../Classes/DockerContainerCompleter.psm1
 using module ../Classes/DockerContextCompleter.psm1
+using module ../Classes/EmptyStringArgumentCompleter.psm1
 
 function Invoke-DockerCommand {
     [CmdletBinding(
@@ -14,6 +15,7 @@ function Invoke-DockerCommand {
         $ContainerName,
 
         [Parameter(ValueFromRemainingArguments)]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $ArgumentList,
 

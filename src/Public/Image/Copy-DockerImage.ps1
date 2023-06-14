@@ -1,4 +1,5 @@
 using namespace System.Management.Automation
+using namespace System.Collections.ObjectModel
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 
@@ -57,7 +58,7 @@ function Copy-DockerImage {
         $DynamicParameters.Add('DestinationTag', [RuntimeDefinedParameter]::new(
                 'DestinationTag',
                 [string],
-                [ObjectModel.Collection[Attribute]]@(
+                [Collection[Attribute]]@(
                     [ParameterAttribute]@{
                         Mandatory                       = $true
                         Position                        = 2

@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerContainer.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
 
 function Rename-DockerContainer {
     [CmdletBinding(
@@ -28,6 +29,7 @@ function Rename-DockerContainer {
         $Id,
 
         [Parameter(Mandatory, Position = 1)]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $NewName,
 

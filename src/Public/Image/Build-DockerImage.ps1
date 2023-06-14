@@ -3,6 +3,8 @@ using namespace System.Management.Automation
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerBuildAddHostTransformation.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/EmptyHashtableArgumentCompleter.psm1
 
 function Build-DockerImage {
     [CmdletBinding(
@@ -25,6 +27,7 @@ function Build-DockerImage {
         # but personally I always want a tag and if I forget one I'm annoyed at myself.
         [Parameter(Mandatory)]
         [AllowNull()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $Tag,
 
@@ -44,12 +47,14 @@ function Build-DockerImage {
 
         [Parameter()]
         [Alias('Dns', 'CustomDns')]
+        [ArgumentCompleter([EmptyHashtableArgumentCompleter])]
         [DockerBuildAddHostTransformation()]
         [Dictionary[string, ipaddress]]
         $AddHosts,
 
         [Parameter()]
         [Alias('BuildArgs')]
+        [ArgumentCompleter([EmptyHashtableArgumentCompleter])]
         [hashtable]
         $Parameters,
 

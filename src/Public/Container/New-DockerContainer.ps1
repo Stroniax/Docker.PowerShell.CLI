@@ -3,6 +3,10 @@ using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContainer.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/EmptyIpAddressArgumentCompleter.psm1
+using module ../../Classes/EmptyHashtableArgumentCompleter.psm1
+using module ../../Classes/NumericArgumentCompleter.psm1
 
 function New-DockerContainer {
     [CmdletBinding(
@@ -22,14 +26,17 @@ function New-DockerContainer {
         [Parameter(Position = 1)]
         [ValidateNotNullOrEmpty()]
         [Alias('ContainerName')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Name,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $HostName,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyIpAddressArgumentCompleter])]
         [IPAddress]
         $IPAddress,
 
@@ -38,10 +45,12 @@ function New-DockerContainer {
         $Interactive,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyHashtableArgumentCompleter])]
         [Hashtable]
         $Labels,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyHashtableArgumentCompleter])]
         [Hashtable]
         $Environment,
 
@@ -59,15 +68,18 @@ function New-DockerContainer {
         $AutoRemove,
 
         [Parameter()]
+        [ArgumentCompleter([NumericArgumentCompleter])]
         [int]
         $TimeoutSeconds,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $WorkingDirectory,
 
         # Any additional parameters to pass to the docker cli
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $Parameters,
 

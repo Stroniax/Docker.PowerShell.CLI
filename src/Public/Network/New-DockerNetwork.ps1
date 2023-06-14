@@ -2,6 +2,9 @@ using module ../../Classes/DockerNetwork.psm1
 using module ../../Classes/DockerNetworkCompleter.psm1
 using module ../../Classes/DockerNetworkAuxAddressTransformation.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/EmptyIpAddressArgumentCompleter.psm1
+using module ../../Classes/EmptyHashtableArgumentCompleter.psm1
 using namespace System.Management.Automation
 using namespace System.Collections.Generic
 
@@ -17,6 +20,7 @@ function New-DockerNetwork {
     [Alias('ndn')]
     param(
         [Parameter(Position = 0, Mandatory)]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Name,
 
@@ -50,26 +54,31 @@ function New-DockerNetwork {
 
         # Driver-specific options
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $Options,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyIpAddressArgumentCompleter])]
         [ipaddress[]]
         $Gateway,
 
         # Subnet in CIDR format that represents a network segment
         [Parameter()]
         [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d+$')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $Subnet,
 
         [Parameter()]
         [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d+$')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string[]]
         $IpRange,
 
         [Parameter()]
         [Alias('AuxAddress')]
+        [ArgumentCompleter([EmptyHashtableArgumentCompleter])]
         [DockerNetworkAuxAddressTransformation()]
         [Dictionary[string, HashSet[IPAddress]]]
         $AuxiliaryAddressMapping,

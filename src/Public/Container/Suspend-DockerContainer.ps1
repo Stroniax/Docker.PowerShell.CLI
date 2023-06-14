@@ -22,8 +22,8 @@ function Suspend-DockerContainer {
         $Name,
 
         [Parameter(ValueFromPipelineByPropertyName, Mandatory, ParameterSetName = 'Id')]
-        [ArgumentCompleter([DockerContainerCompleter])]
         [Alias('Container', 'ContainerId')]
+        [ArgumentCompleter([DockerContainerCompleter])]
         [string[]]
         $Id,
 

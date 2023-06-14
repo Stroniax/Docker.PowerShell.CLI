@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerContainer.psm1
+using module ../../Classes/NumericArgumentCompleter.psm1
 
 function Stop-DockerContainer {
     [CmdletBinding(
@@ -32,6 +33,7 @@ function Stop-DockerContainer {
         $Force,
 
         [Parameter()]
+        [ArgumentCompleter([NumericArgumentCompleter])]
         [int]
         $TimeoutSeconds,
 

@@ -1,6 +1,8 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/NumericArgumentCompleter.psm1
+using module ../../Classes/DateTimeArgumentCompleter.psm1
 
 function Get-DockerContainerLog {
     [CmdletBinding(
@@ -24,15 +26,18 @@ function Get-DockerContainerLog {
         $Id,
 
         [Parameter()]
+        [ArgumentCompleter([DateTimeArgumentCompleter])]
         [DateTime]
         $Since,
 
         [Parameter()]
+        [ArgumentCompleter([DateTimeArgumentCompleter])]
         [DateTime]
         $Until,
 
         [Parameter()]
         [Alias('Tail')]
+        [ArgumentCompleter([NumericArgumentCompleter])]
         [int]
         $Last,
 

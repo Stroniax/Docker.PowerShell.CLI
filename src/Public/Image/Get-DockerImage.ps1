@@ -47,7 +47,8 @@ function Get-DockerImage {
 
         [Parameter()]
         [Alias('All')]
-        [switch]$IncludeIntermediateImages,
+        [switch]
+        $IncludeIntermediateImages,
 
         [Parameter()]
         [Alias('Untagged')]

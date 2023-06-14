@@ -19,8 +19,8 @@ function Wait-DockerContainer {
         $Name,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
-        [ArgumentCompleter([DockerContainerCompleter])]
         [Alias('Container', 'ContainerId')]
+        [ArgumentCompleter([DockerContainerCompleter])]
         [string]
         $Id,
 

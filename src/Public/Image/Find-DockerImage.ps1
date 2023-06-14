@@ -1,6 +1,8 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/BooleanArgumentCompleter.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/NumericArgumentCompleter.psm1
 
 function Find-DockerImage {
     [CmdletBinding(
@@ -9,6 +11,7 @@ function Find-DockerImage {
     )]
     param(
         [Parameter(Mandatory, Position = 0)]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Keyword,
 
@@ -26,12 +29,14 @@ function Find-DockerImage {
 
         [Parameter()]
         [Alias('Stars')]
+        [ArgumentCompleter([NumericArgumentCompleter])]
         [int]
         $MinimumStars,
 
         [Parameter()]
         [ValidateRange(1, [int]::MaxValue)]
         [Alias('First', 'Take')]
+        [ArgumentCompleter([NumericArgumentCompleter])]
         [int]
         $Limit = 100,
 

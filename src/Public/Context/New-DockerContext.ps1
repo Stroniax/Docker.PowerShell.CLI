@@ -1,5 +1,6 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContext.psm1
+using module ../../Classes/EmptyStringArgumentCompleter.psm1
 
 function New-DockerContext {
     [CmdletBinding(
@@ -12,12 +13,14 @@ function New-DockerContext {
     [Alias('ndcx')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Name,
 
         [Parameter(Mandatory)]
         [Alias('DockerEndpoint', 'Host')]
         [ValidatePattern('^[^,]+$')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $DockerHost,
 
@@ -27,6 +30,7 @@ function New-DockerContext {
         $DefaultStackOrchestrator,
 
         [Parameter()]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Description
     )

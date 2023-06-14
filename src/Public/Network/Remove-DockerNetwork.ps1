@@ -30,6 +30,8 @@ function Remove-DockerNetwork {
         $UnusedNetworks,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter([DockerContextCompleter])]
         [string]
         $Context
     )
