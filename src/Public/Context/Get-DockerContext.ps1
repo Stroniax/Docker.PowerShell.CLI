@@ -1,39 +1,40 @@
 using namespace System.Collections.Generic
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerContext.psm1
 
 function Get-DockerContext {
     [CmdletBinding(
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false
     )]
+    [OutputType([DockerContext])]
     [Alias('gdcx')]
     param(
         [Parameter(Position = 0)]
         [ValidateNotNullOrEmpty()]
         [SupportsWildcards()]
-        [Alias('Name')]
+        [Alias('ContextName')]
         [ArgumentCompleter([DockerContextCompleter])]
         [string[]]
-        $Context
+        $Name
     )
     process {
         $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-        foreach ($i in $Context) {
+        foreach ($i in $Name) {
             if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
                 [void]$ReportNotMatched.Add($i)
             }
         }
 
         Invoke-Docker context list --format '{{ json . }}' | ForEach-Object {
-            $pso = $_ | ConvertFrom-Json
+            [DockerContext]$pso = ConvertFrom-Json $_
 
-            if (-not (Test-MultipleWildcard -WildcardPattern $Context -ActualValue $pso.Name)) {
+            if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Name)) {
                 return
             }
 
-            $ReportNotMatched.Remove($pso.Name)
-            $pso.PSTypeNames.Insert(0, 'Docker.Context')
+            [void]$ReportNotMatched.Remove($pso.Name)
             $pso
         }
 
