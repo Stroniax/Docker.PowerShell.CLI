@@ -19,26 +19,6 @@ using module src/Classes/DockerBuildAddHostTransformation.psm1
 
 #region Docker Container
 
-function Connect-DockerContainer {
-    [CmdletBinding()]
-    [Alias('ccdc')]
-    param(
-        [Parameter(Mandatory)]
-        [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
-        $ContainerName,
-
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [ArgumentCompleter([DockerContextCompleter])]
-        [string]
-        $Context
-    )
-    process {
-        Invoke-Docker attach $ContainerName -Context $Context
-    }
-}
-
 function Start-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
