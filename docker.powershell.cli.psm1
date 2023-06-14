@@ -15,22 +15,6 @@ using module src/Classes/DockerBuildAddHostTransformation.psm1
 
 #region Helper Functions
 
-function ConvertTo-DockerWildcard {
-    [CmdletBinding()]
-    param(
-        [Parameter(ValueFromPipeline)]
-        [string]
-        $Expression
-    )
-    process {
-        $Expression -split '(?<!`)\*' | ForEach-Object {
-            if ($_) {
-                $_ -replace '`\*', '*'
-            }
-        }
-    }
-}
-
 function Test-MultipleWildcard {
     [CmdletBinding()]
     param(
