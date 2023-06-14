@@ -392,12 +392,13 @@ namespace Docker.PowerShell.CLI {
 
         private static string GetName(string arguments)
         {
-            return string.Format("docker pull {0}", arguments);
+            return string.Format("docker {0}", arguments);
         }
 
         public DockerPullJob(string command, string arguments)
             : base(command, GetName(arguments))
         {
+            PSJobTypeName = "DockerJob";
             var startInfo = new ProcessStartInfo("docker", arguments);
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
@@ -453,6 +454,151 @@ namespace Docker.PowerShell.CLI {
                 var pso = new PSObject(image);
                 Output.Add(pso);
 
+                SetJobState(JobState.Completed);
+            }
+            else
+            {
+                SetJobState(JobState.Failed);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _process.Exited -= OnProcessExited;
+                _process.OutputDataReceived -= OnOutputDataReceived;
+                _process.ErrorDataReceived -= OnErrorDataReceieved;
+
+                _process.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+}
+'@
+    }
+}
+
+function Assert-DockerPushJob {
+    [CmdletBinding()]
+    param()
+    process {
+        if ('Docker.PowerShell.CLI.DockerPushJob' -as [type]) {
+            return
+        }
+
+        Add-Type -TypeDefinition @'
+using System;
+using System.Management.Automation;
+using System.Diagnostics;
+
+namespace Docker.PowerShell.CLI {
+    public sealed class DockerPushJob : Job
+    {
+        // Docker process
+        private readonly Process _process;
+
+        // Abstract member, does not apply
+        public override string Location
+        {
+            get { return _process.MachineName; }
+        }
+
+        public override string StatusMessage
+        {
+            get
+            {
+                if (_process.HasExited)
+                {
+                    return string.Format("Exited ({0})", _process.ExitCode);
+                }
+                else
+                {
+                    return "Running";
+                }
+            }
+        }
+
+        public override bool HasMoreData
+        {
+            get
+            {
+                return Error.Count > 0
+                    || Debug.Count > 0;
+            }
+        }
+
+        public override void StopJob()
+        {
+            _process.Kill();
+            SetJobState(JobState.Stopped);
+        }
+
+        public int GetProcessId()
+        {
+            return _process.Id;
+        }
+
+        private static string GetName(string arguments)
+        {
+            return string.Format("docker {0}", arguments);
+        }
+
+        public DockerPushJob(string command, string arguments)
+            : base(command, GetName(arguments))
+        {
+            PSJobTypeName = "DockerJob";
+            var startInfo = new ProcessStartInfo("docker", arguments);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+
+            _process = new Process();
+            _process.StartInfo = startInfo;
+            _process.EnableRaisingEvents = true;
+            _process.Exited += OnProcessExited;
+            _process.OutputDataReceived += OnOutputDataReceived;
+            _process.ErrorDataReceived += OnErrorDataReceieved;
+
+            SetJobState(JobState.Running);
+
+            _process.Start();
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+        }
+
+        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e == null || e.Data == null)
+            {
+                return;
+            }
+            var record = new DebugRecord(e.Data);;
+            Debug.Add(record);
+        }
+
+        private void OnErrorDataReceieved(object sender, DataReceivedEventArgs e)
+        {
+            if (e == null || e.Data == null)
+            {
+                return;
+            }
+            var exn = new Exception(e.Data);
+            var err = new ErrorRecord(
+                exn,
+                "DockerPullError",
+                ErrorCategory.FromStdErr,
+                null
+            );
+            Error.Add(err);
+        }
+
+        private void OnProcessExited(object sender, EventArgs e)
+        {
+            if (_process.ExitCode == 0)
+            {
                 SetJobState(JobState.Completed);
             }
             else
@@ -1808,7 +1954,7 @@ function Remove-DockerImage {
             # no images
             return
         }
-        Invoke-Docker $ArgumentList -Context $Context
+        Invoke-Docker $ArgumentList -Context $Context | Write-Debug
     }
 }
 
@@ -2160,7 +2306,6 @@ function Export-DockerImage {
             Get-Item $OutputPath
         }
     }
-
 }
 
 function Import-DockerImage {
@@ -2227,7 +2372,6 @@ function Import-DockerImage {
     }
 }
 
-
 function Install-DockerImage {
     [CmdletBinding(
         DefaultParameterSetName = 'FullName',
@@ -2251,19 +2395,18 @@ function Install-DockerImage {
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameTagJob')]
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameAllTagsJob')]
         [Parameter(ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameDigestJob')]
-        [ValidateScript({ $_ -notmatch '[:@ ]'})]
         [string]
         $Name,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTag')]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameTagJob')]
-        [ValidateScript({ $_ -notmatch '[:@ ]'})]
+        [ValidateScript({ $_ -notmatch '[:@ ]' })]
         [string]
         $Tag,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigest')]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'NameDigestJob')]
-        [ValidateScript({ $_ -match '^(sha256:)?[0-9a-f]+$'})]
+        [ValidateScript({ $_ -match '^(sha256:)?[0-9a-f]+$' })]
         [string]
         $Digest,
 
@@ -2297,9 +2440,6 @@ function Install-DockerImage {
         [string]
         $Context
     )
-    begin {
-        Assert-DockerPullJob
-    }
     process {
 
         $ArgumentList = @(
@@ -2330,6 +2470,7 @@ function Install-DockerImage {
             )
 
             if ($AsJob) {
+                Assert-DockerPullJob
                 $Job = [Docker.PowerShell.CLI.DockerPullJob]::new(
                     $MyInvocation.Line,
                     $FullArgumentList
@@ -2343,6 +2484,153 @@ function Install-DockerImage {
 
                 if ($? -and $PassThru) {
                     Get-DockerImage -FullName $DockerOutput[-1]
+                }
+            }
+        }
+    }
+}
+
+function Publish-DockerImage {
+    [CmdletBinding(
+        DefaultParameterSetName = 'FullName',
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false,
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
+    )]
+    [OutputType('Docker.Image', ParameterSetName = 'FullName')]
+    [OutputType('Docker.PowerShell.CLI.DockerPushJob', ParameterSetName = 'FullNameJob')]
+    [Alias('pbdi')]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'FullName')]
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'FullNameJob')]
+        [Alias('Reference')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string[]]
+        $FullName,
+
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Name')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'NameJob')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'AllTags')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'AllTagsJob')]
+        [Alias('ImageName', 'RepositoryName')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string]
+        $Name,
+
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 1, ParameterSetName = 'Name')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 1, ParameterSetName = 'NameJob')]
+        [ValidateScript({ $_ -notmatch '[:@ ]' })]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string]
+        $Tag,
+
+        [Parameter(Mandatory, ParameterSetName = 'AllTags')]
+        [Parameter(Mandatory, ParameterSetName = 'AllTagsJob')]
+        [switch]
+        $AllTags,
+
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ParameterSetName = 'IdJob')]
+        [Alias('ImageId')]
+        [ArgumentCompleter([DockerImageCompleter])]
+        [string]
+        $Id,
+
+        [Parameter()]
+        [switch]
+        $DisableContentTrust,
+
+        [Parameter(ParameterSetName = 'Id')]
+        [Parameter(ParameterSetName = 'AllTags')]
+        [Parameter(ParameterSetName = 'FullName')]
+        [Parameter(ParameterSetName = 'Name')]
+        [switch]
+        $PassThru,
+
+        [Parameter(Mandatory, ParameterSetName = 'NameJob')]
+        [Parameter(Mandatory, ParameterSetName = 'AllTagsJob')]
+        [Parameter(Mandatory, ParameterSetName = 'FullNameJob')]
+        [Parameter(Mandatory, ParameterSetName = 'IdJob')]
+        [switch]
+        $AsJob,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter([DockerContextCompleter])]
+        [string]
+        $Context
+    )
+    begin {
+        $HasPublishedFullName = [HashSet[string]]::new()
+    }
+    process {
+        $ArgumentList = @(
+            'image'
+            'push'
+            if ($DisableContentTrust) { '--disable-content-trust' }
+            if ($AllTags) { '--all-tags' }
+        )
+
+        if ($Name -and $Tag) {
+            $FullName = "${Name}:$Tag"
+        }
+        elseif ($Name) {
+            $FullName = $Name
+        }
+        if ($Id) {
+            $FullName = Get-DockerImageInternal -Id $Id -Context $Context -EscapeId | ForEach-Object FullName
+        }
+
+        foreach ($f in $FullName) {
+            # Only publish once, in case of duplicate in pipeline
+            if ($HasPublishedFullName.Contains($f)) {
+                Write-Warning "Image '$f' has already just been published."
+                continue
+            }
+            else {
+                [void]$HasPublishedFullName.Add($f)
+            }
+
+            # Make sure the image exists
+            if ($AllTags) {
+                $Image = Get-DockerImageInternal -Name $f -Context $Context
+            }
+            else {
+                $Image = Get-DockerImageInternal -FullName $f -Context $Context
+            }
+            if (!$? -or !$Image) {
+                write-debug break
+                continue
+            }
+
+            if (!$PSCmdlet.ShouldProcess(
+                    "Publishing image '$f'.",
+                    "Publish image '$f'?",
+                    "docker $ArgumentList $f"
+                )) {
+                continue
+            }
+
+            $FullArgumentList = @(
+                $ArgumentList
+                $f
+            )
+
+            if ($AsJob) {
+                Assert-DockerPushJob
+                $Job = [Docker.PowerShell.CLI.DockerPushJob]::new(
+                    $MyInvocation.Line,
+                    $FullArgumentList
+                )
+
+                $PSCmdlet.JobRepository.Add($Job)
+                $Job
+            }
+            else {
+                Invoke-Docker $FullArgumentList -Context $Context | Write-Debug
+                if ($PassThru) {
+                    $Image
                 }
             }
         }
