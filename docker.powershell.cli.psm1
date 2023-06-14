@@ -952,10 +952,6 @@ function New-DockerContainer {
         $Parameters,
 
         [Parameter()]
-        [switch]
-        $PassThru,
-
-        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter([DockerContextCompleter])]
         [string]
@@ -1038,10 +1034,9 @@ function New-DockerContainer {
             return
         }
 
-        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
-            if ($PassThru) {
-                Get-DockerContainerInternal -Id $_ -Context $Context
-            }
+        $Id = Invoke-Docker $ArgumentList -Context $Context 
+        if ($?) {
+            Get-DockerContainerInternal -Id $Id -Context $Context
         }
     }
 }
@@ -2600,7 +2595,6 @@ function Publish-DockerImage {
                 $Image = Get-DockerImageInternal -FullName $f -Context $Context
             }
             if (!$? -or !$Image) {
-                write-debug break
                 continue
             }
 
