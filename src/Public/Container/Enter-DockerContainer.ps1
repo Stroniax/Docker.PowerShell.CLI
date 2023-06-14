@@ -1,6 +1,7 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerBinArgumentCompleter.psm1
 
 #TODO: Does not reliably enter a prompt in the container
 # Depends on the container having /bin/ash
@@ -26,6 +27,11 @@ function Enter-DockerContainer {
         [string]
         $Id,
 
+        [Parameter(Mandatory, Position = 1)]
+        [ArgumentCompleter([DockerBinArgumentCompleter])]
+        [string[]]
+        $Command,
+
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter([DockerContextCompleter])]
@@ -41,6 +47,13 @@ function Enter-DockerContainer {
             return
         }
 
-        Invoke-Docker exec -it $Container.Id /bin/ash -Context $Context
+        $ArgumentList = @(
+            'exec'
+            '-it'
+            $Container.Id
+            $Command
+        )
+
+        Invoke-Docker $ArgumentList -Context $Context
     }
 }
