@@ -1,7 +1,6 @@
 # Import the monolith module file and types/formats
 Update-TypeData -PrependPath $PSScriptRoot/docker.types.ps1xml
 Update-FormatData -PrependPath $PSScriptRoot/docker.formats.ps1xml
-$Root = Import-Module $PSScriptRoot/Docker.PowerShell.CLI.psm1 -PassThru
 
 # Import the micro modules
 Get-ChildItem $PSScriptRoot/src/Public -Recurse -Include '*.psm1', '*.ps1' | ForEach-Object {
@@ -30,7 +29,6 @@ Get-ChildItem $PSScriptRoot/src -Recurse -Include '*.formats.ps1xml' | ForEach-O
 }
 
 $ExportFunctions = @(
-    $Root.ExportedFunctions.Keys
     Get-ChildItem $PSScriptRoot/src/Public -File -Recurse -Include '*.psm1', '*.ps1' | ForEach-Object -MemberName BaseName
 ) | Where-Object { $_ }
-Export-ModuleMember -Function $ExportFunctions
+Export-ModuleMember -Function $ExportFunctions -Alias *
