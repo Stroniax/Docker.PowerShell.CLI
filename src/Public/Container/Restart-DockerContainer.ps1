@@ -1,15 +1,17 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerContainer.psm1
 
 function Restart-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
-        ConfirmImpact = [ConfirmImpact]::Medium,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
     )]
+    [OutputType([DockerContainer])]
     [Alias('rtdc')]
     param(
         [Parameter(Position = 0, Mandatory, ParameterSetName = 'Name')]

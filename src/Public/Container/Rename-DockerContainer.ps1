@@ -1,15 +1,17 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerContainer.psm1
 
 function Rename-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
-        ConfirmImpact = [ConfirmImpact]::Medium,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
     )]
+    [OutputType([DockerContainer])]
     [Alias('rndc')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]

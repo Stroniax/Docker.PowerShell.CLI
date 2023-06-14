@@ -2,13 +2,17 @@ using namespace System.Collections.Generic
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerImageCompleter.psm1
+using module ../../Classes/DockerContainer.psm1
 
 function New-DockerContainer {
     [CmdletBinding(
-        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
-        ConfirmImpact = [ConfirmImpact]::Medium,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand)]
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
+    )]
+    [OutputType([DockerContainer])]
+    [Alias('ndc')]
     param(
         [Parameter(Mandatory, Position = 0)]
         [ArgumentCompleter([DockerImageCompleter])]

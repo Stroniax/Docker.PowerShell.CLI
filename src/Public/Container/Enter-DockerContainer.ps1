@@ -7,8 +7,10 @@ using module ../../Classes/DockerContextCompleter.psm1
 function Enter-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        PositionalBinding = $false,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand)]
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false
+    )]
+    [OutputType([System.Management.Automation.Internal.AutomationNull])]
     [Alias('etdc')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]

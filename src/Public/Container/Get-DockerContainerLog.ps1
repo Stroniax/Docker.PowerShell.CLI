@@ -8,6 +8,7 @@ function Get-DockerContainerLog {
         PositionalBinding = $false,
         RemotingCapability = [RemotingCapability]::OwnedByCommand
     )]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
         [SupportsWildcards()]

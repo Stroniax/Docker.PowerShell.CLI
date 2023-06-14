@@ -46,22 +46,8 @@
         <Name>Docker.Container</Name>
         <Members>
             <ScriptProperty>
-                <Name>Names</Name>
-                <GetScriptBlock>
-                    $this.RawNames.Split(',')
-                </GetScriptBlock>
-            </ScriptProperty>
-            <ScriptProperty>
-                <Name>Labels</Name>
-                <GetScriptBlock>
-                    $this.RawLabels.Split(',')
-                </GetScriptBlock>
-            </ScriptProperty>
-            <ScriptProperty>
                 <Name>Created</Name>
-                <GetScriptBlock>
-                    [DateTimeOffset][string]$this.CreatedAt.Split(' ')[0..2]
-                </GetScriptBlock>
+                <GetScriptBlock>$this.CreatedAt.LocalDateTime</GetScriptBlock>
             </ScriptProperty>
         </Members>
     </Type>

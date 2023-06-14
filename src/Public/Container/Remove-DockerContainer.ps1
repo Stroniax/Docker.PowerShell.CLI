@@ -6,10 +6,10 @@ using module ../../Classes/DockerContextCompleter.psm1
 function Remove-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
-        ConfirmImpact = [ConfirmImpact]::Medium,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
     )]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]

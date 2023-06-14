@@ -1,15 +1,17 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerContainer.psm1
 
 function Start-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        SupportsShouldProcess,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
-        ConfirmImpact = [ConfirmImpact]::Medium,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
+        SupportsShouldProcess,
+        ConfirmImpact = [ConfirmImpact]::Medium
     )]
+    [OutputType([DockerContainer])]
     [Alias('sadc')]
     param(
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Name')]

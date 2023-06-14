@@ -5,9 +5,10 @@ using module ../../Classes/DockerContextCompleter.psm1
 function Wait-DockerContainer {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        PositionalBinding = $false,
-        RemotingCapability = [RemotingCapability]::OwnedByCommand
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false
     )]
+    [OutputType([System.Management.Automation.Internal.AutomationNull])]
     [Alias('wdc')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]

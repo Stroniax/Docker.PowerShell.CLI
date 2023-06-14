@@ -1,11 +1,17 @@
 using namespace System.Collections.Generic
 using namespace System.Management.Automation
+using module ../../Classes/DockerContainer.psm1
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 
 function Get-DockerContainer {
-    [CmdletBinding(DefaultParameterSetName = 'Id')]
+    [CmdletBinding(
+        DefaultParameterSetName = 'Id',
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
+        PositionalBinding = $false
+    )]
     [Alias('gdc')]
+    [OutputType([DockerContainer])]
     param(
         [Parameter(Position = 0, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
@@ -87,13 +93,8 @@ function Get-DockerContainer {
 
 
         Invoke-Docker $cl -Context $Context | ForEach-Object {
-            $pso = $_ | ConvertFrom-Json
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawNames', $pso.Names))
-            $pso.PSObject.Members.Remove('Names')
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
-            $pso.PSObject.Members.Remove('Labels')
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
-            $pso.PSTypeNames.Insert(0, 'Docker.Container')
+            [DockerContainer]$pso = $_ | ConvertFrom-Json
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('PSDockerContext', $Context))
 
             if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Names)) {
                 return

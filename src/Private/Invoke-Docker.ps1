@@ -1,4 +1,4 @@
-using namespace System.Collections;
+using namespace System.Collections.Generic
 using module ../Classes/ValidateDockerContext.psm1
 
 function Invoke-Docker {
