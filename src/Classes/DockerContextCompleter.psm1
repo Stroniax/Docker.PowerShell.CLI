@@ -1,8 +1,9 @@
-using namespace System.Collections;
-using namespace System.Diagnostics;
-using namespace System.Collections.Generic;
-using namespace System.Management.Automation;
-using namespace System.Management.Automation.Language;
+using namespace System.Collections
+using namespace System.Collections.Generic
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+using module ../Private/ConvertTo-CompletionText.psm1
+using module ../Private/ConvertTo-WordToCompleteWildcard.psm1
 
 class DockerContextCompleter : IArgumentCompleter {
     [IEnumerable[CompletionResult]] CompleteArgument(
@@ -12,10 +13,7 @@ class DockerContextCompleter : IArgumentCompleter {
         [CommandAst]$commandAst,
         [IDictionary]$fakeBoundParameters
     ) {
-        if ($null -eq $wordToComplete) {
-            $wordToComplete = ''
-        }
-        $wc = $wordToComplete.Trim('"''') + '*'
+        $wc = ConvertTo-WordToCompleteWildcard -WordToComplete $wordToComplete
 
         Write-Debug 'docker context list --quiet'
         $Contexts = docker context list --quiet
@@ -33,9 +31,10 @@ class DockerContextCompleter : IArgumentCompleter {
             else {
                 $DisplayText = $Context
             }
+            $CompletionText = ConvertTo-CompletionText -InputObject $Context -WordToComplete $wordToComplete
             $Results.Add(
                 [CompletionResult]::new(
-                    $Context,
+                    $CompletionText,
                     $DisplayText,
                     'ParameterValue',
                     $DisplayText

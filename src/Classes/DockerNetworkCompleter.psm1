@@ -1,12 +1,20 @@
-class DockerNetworkCompleter : System.Management.Automation.IArgumentCompleter {
-    [System.Collections.Generic.IEnumerable[System.Management.Automation.CompletionResult]] CompleteArgument(
+using namespace System.Collections
+using namespace System.Collections.Generic
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+using module ../Private/ConvertTo-CompletionText.psm1
+using module ../Private/ConvertTo-WordToCompleteWildcard.psm1
+
+class DockerNetworkCompleter : IArgumentCompleter {
+    [IEnumerable[CompletionResult]] CompleteArgument(
         [string] $CommandName,
         [string] $ParameterName,
         [string] $WordToComplete,
-        [System.Management.Automation.Language.CommandAst] $CommandAst,
-        [System.Collections.IDictionary] $FakeBoundParameters
+        [CommandAst] $CommandAst,
+        [IDictionary] $FakeBoundParameters
     ) {
-        $CompletionResults = [System.Collections.Generic.List[System.Management.Automation.CompletionResult]]::new()
+        $wc = ConvertTo-WordToCompleteWildcard -WordToComplete $WordToComplete
+        $CompletionResults = [List[CompletionResult]]::new()
 
         $DockerNetworkParameters = @{}
         if ($FakeBoundParameters['Context']) {
@@ -20,19 +28,19 @@ class DockerNetworkCompleter : System.Management.Automation.IArgumentCompleter {
             $RawCompletionText = ''
             switch ($ParameterName) {
                 { $_ -in @('Id', 'NetworkId') } {
-                    $IsMatch = $network.Id -like "$WordToComplete*"
+                    $IsMatch = $network.Id -like $wc
                     $RawCompletionText = $network.Id
                 }
                 'Driver' {
-                    $IsMatch = $network.Driver -ne 'null' -and $network.Driver -like "$WordToComplete*"
+                    $IsMatch = $network.Driver -ne 'null' -and $network.Driver -like $wc
                     $RawCompletionText = $network.Driver
                 }
                 'Scope' {
-                    $IsMatch = $network.Scope -like "$WordToComplete*"
+                    $IsMatch = $network.Scope -like $wc
                     $RawCompletionText = $network.Scope
                 }
                 default {
-                    $IsMatch = $network.Name -like "$WordToComplete*"
+                    $IsMatch = $network.Name -like $wc
                     $RawCompletionText = $network.Name
                 }
             }
@@ -40,15 +48,10 @@ class DockerNetworkCompleter : System.Management.Automation.IArgumentCompleter {
                 continue
             }
 
-            if ($RawCompletionText -match '^[a-z0-9]+$') {
-                $CompletionText = $RawCompletionText
-            }
-            else {
-                $CompletionText = "`'$RawCompletionText`'"
-            }
+            $CompletionText = ConvertTo-CompletionText -InputObject $RawCompletionText -WordToComplete $WordToComplete
 
             $CompletionResults.Add(
-                [System.Management.Automation.CompletionResult]::new(
+                [CompletionResult]::new(
                     $CompletionText,
                     $RawCompletionText,
                     'ParameterValue',

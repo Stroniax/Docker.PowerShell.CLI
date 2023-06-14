@@ -1,8 +1,9 @@
-using namespace System.Collections;
-using namespace System.Diagnostics;
-using namespace System.Collections.Generic;
-using namespace System.Management.Automation;
-using namespace System.Management.Automation.Language;
+using namespace System.Collections
+using namespace System.Collections.Generic
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+using module ../Private/ConvertTo-CompletionText.psm1
+using module ../Private/ConvertTo-WordToCompleteWildcard.psm1
 
 class DockerImageCompleter : IArgumentCompleter {
     [IEnumerable[CompletionResult]] CompleteArgument(
@@ -12,10 +13,8 @@ class DockerImageCompleter : IArgumentCompleter {
         [CommandAst]$commandAst,
         [IDictionary]$fakeBoundParameters
     ) {
-        if ($null -eq $wordToComplete) {
-            $wordToComplete = ''
-        }
-        $wc = $wordToComplete.Trim('"''') + '*'
+        $wc = ConvertTo-WordToCompleteWildcard $wordToComplete
+
         $ProxyParameters = @{}
         if ($FakeBoundParameters['Context']) {
             $ProxyParameters['Context'] = $FakeBoundParameters['Context']
@@ -53,8 +52,7 @@ class DockerImageCompleter : IArgumentCompleter {
                 $ListItemText = "$($Image.FullName) ($($Image.Id))"
             }
 
-            $HasUnsafeChar = $CompletionText.IndexOfAny("`0`n`r`t`v`'`"`` ".ToCharArray()) -ge 0
-            $SafeCompletionText = if ($HasUnsafeChar) { "'$CompletionText'" } else { $CompletionText }
+            $SafeCompletionText = ConvertTo-CompletionText -InputObject $CompletionText -WordToComplete $wordToComplete
 
             $CompletionResults.Add(
                 [CompletionResult]::new(
