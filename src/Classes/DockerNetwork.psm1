@@ -35,7 +35,7 @@ class DockerNetwork {
                     continue
                 }
                 if ($Property.Name -eq 'CreatedAt') {
-                    $this.CreatedAt = [DateTimeOffset]::Parse($Property.Value.Substring(0, 33))
+                    $this.CreatedAt = [DateTimeOffset][string]$Property.Value.Split(' ')[0..2]
                     continue
                 }
 
