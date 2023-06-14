@@ -8,8 +8,8 @@ class DockerNetworkCompleter : System.Management.Automation.IArgumentCompleter {
     ) {
         $CompletionResults = [System.Collections.Generic.List[System.Management.Automation.CompletionResult]]::new()
 
-        Write-Debug "docker network list --format json"
-        $networks = docker network list --format json | convertfrom-json
+        Write-Debug 'docker network list --format {{ json . }}'
+        $networks = docker network list --format '{{ json . }}' | ConvertFrom-Json
 
         foreach ($network in $networks) {
             $IsMatch = $false

@@ -65,7 +65,7 @@ function Get-DockerNetwork {
             'network'
             'list'
             '--format'
-            'json'
+            '{{ json . }}'
             '--no-trunc'
             foreach ($i in $Id | ConvertTo-DockerWildcard) {
                 '--filter'

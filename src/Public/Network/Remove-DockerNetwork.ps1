@@ -61,7 +61,7 @@ function Remove-DockerNetwork {
                 continue
             }
 
-            $RemoveNetworks.Add($Network.Id)
+            [void]$RemoveNetworks.Add($Network.Id)
         }
     }
     end {
