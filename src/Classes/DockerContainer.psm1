@@ -16,6 +16,8 @@ class DockerContainer {
 
     [string[]]$Ports
 
+    [string[]]$Networks
+
     [DateTimeOffset]$CreatedAt
 
     [string] ToString() {
@@ -39,6 +41,9 @@ class DockerContainer {
             }
             elseif ($Property.Name -eq 'CreatedAt') {
                 $this.CreatedAt = [DateTimeOffset][string]$Property.Value.Split(' ')[0..2]
+            }
+            elseif ($Property.Name -eq 'Networks') {
+                $this.Networks = $Property.Value -split ','
             }
             elseif ($this.PSObject.Properties[$Property.Name]) {
                 $this.$($Property.Name) = $Property.Value

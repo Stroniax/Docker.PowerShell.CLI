@@ -33,6 +33,10 @@
                 <Name>Created</Name>
                 <GetScriptBlock>$this.CreatedAt.LocalDateTime</GetScriptBlock>
             </ScriptProperty>
+            <AliasProperty>
+                <Name>Name</Name>
+                <ReferencedMemberName>Names</ReferencedMemberName>
+            </AliasProperty>
         </Members>
     </Type>
     <Type>

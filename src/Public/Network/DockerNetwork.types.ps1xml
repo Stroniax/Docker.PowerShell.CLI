@@ -9,4 +9,13 @@
             </AliasProperty>
         </Members>
     </Type>
+    <Type>
+        <Name>Docker.ContainerNetworkConnection</Name>
+        <Members>
+            <AliasProperty>
+                <Name>Id</Name>
+                <ReferencedMemberName>EndpointID</ReferencedMemberName>
+            </AliasProperty>
+        </Members>
+    </Type>
 </Types>
