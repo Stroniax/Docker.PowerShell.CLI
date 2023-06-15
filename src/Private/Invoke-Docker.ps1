@@ -1,6 +1,7 @@
 using namespace System.Collections.Generic
 using module ../Classes/ValidateDockerContext.psm1
 
+$Docker = (Get-Command 'docker' -ErrorAction Stop).Path
 function Invoke-Docker {
     [CmdletBinding()]
     param(
@@ -20,7 +21,7 @@ function Invoke-Docker {
             $List.Insert(0, '--context')
             $List.Insert(1, $Context)
         }
-        Write-Debug "docker $List"
-        docker $List
+        Write-Debug "$Docker $List"
+        & $Docker $List
     }
 }
