@@ -38,7 +38,7 @@
             # Tags = @()
 
             # A URL to the license for this module.
-            LicenseUri = 'https://opensource.org/license/mit'
+            LicenseUri = 'https://github.com/Stroniax/Docker.PowerShell.CLI/.LICENSE'
 
             # A URL to the main website for this project.
             # ProjectUri = ''

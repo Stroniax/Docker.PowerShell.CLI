@@ -37,7 +37,7 @@ can be used when developing the module.
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [Apache License](./LICENSE).
 
 ## Acknowledgements
 
