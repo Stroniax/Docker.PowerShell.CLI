@@ -6,11 +6,11 @@ param(
     [string]
     $OutputPath = (Join-Path $PSScriptRoot 'debug/Docker.PowerShell.CLI'),
 
-    [switch]
-    $Force,
-
     [System.Management.Automation.SemanticVersion]
     $Version = '0.0.1-dev',
+
+    [switch]
+    $Force,
 
     [string[]]
     $Functions,

@@ -71,6 +71,25 @@
         "-File",
         "${workspaceFolder}/build/update-docs.ps1"
       ]
+    },
+    {
+      "label": "build-release",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-File",
+        "${workspaceFolder}/build/build-release.ps1",
+        "-Version",
+        "${input:Version}"
+      ],
+      "problemMatcher": [],
+    }
+  ],
+  "inputs": [
+    {
+      "id": "Version",
+      "description": "Semantic version of module to build",
+      "type": "promptString",
     }
   ]
 }
