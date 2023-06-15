@@ -68,7 +68,30 @@ else {
 
 if (!$UpdateScriptModule) {
     Write-Host "$ScriptModulePath is up to date" -ForegroundColor Cyan
-    Get-Item $ScriptModulePath
+    $Ast = $Parser::ParseFile($ScriptModulePath, [ref]$null, [ref]$null)
+    $ExportedMembers = $Ast.Find({
+            param([System.Management.Automation.Language.Ast]$Ast)
+
+            if ($Ast -isnot [System.Management.Automation.Language.HashtableAst]) {
+                return $false
+            }
+            if ($Ast.Parent.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
+                return $false
+            }
+            if ($Ast.Parent.Parent.Left -isnot [System.Management.Automation.Language.VariableExpressionAst]) {
+                return $false
+            }
+
+            return $Ast.Parent.Parent.Left.VariablePath.UserPath -eq 'ExportModuleMember'
+        }, $false).SafeGetValue()
+    
+    [pscustomobject]@{
+        PublicFunctions = $ExportedMembers['Function']
+        PublicAliases   = $ExportedMembers['Alias']
+        PublicVariables = $ExportedMembers['Variable']
+        SourceFiles     = $SourceFiles.FullName
+        OutputFile      = Get-Item $ScriptModulePath
+    }
     return
 }
 
@@ -96,6 +119,7 @@ foreach ($m in $UsingModules) {
 
 $PublicFunctions = [System.Collections.Generic.HashSet[string]]::new()
 $PublicAliases = [System.Collections.Generic.HashSet[string]]::new()
+$PublicVariables = [System.Collections.Generic.HashSet[string]]::new()
 
 foreach ($File in $SourceFiles) {
     $Ast = $Parser::ParseFile($File, [ref]$null, [ref]$null)
@@ -110,19 +134,36 @@ foreach ($File in $SourceFiles) {
                 [void]$PublicAliases.Add($Alias.SafeGetValue())
             }
         }
+        $Variables = $Ast.FindAll({ $args[0] -is [System.Management.Automation.Language.VariableExpressionAst] }, $false)
+        foreach ($Variable in $Variables) {
+            if ($Variable.IsUnqualified) {
+                [void]$PublicVariables.Add($Variable.VariablePath.UserPath)
+            }
+        }
     }
 }
+
+@"
+
+`$ExportModuleMember = @{
+    Function = @(
+        $(($PublicFunctions | ForEach-Object { "'$_'" }) -join ",$([Environment]::NewLine)`t`t")
+    )
+    Alias = @(
+        $(($PublicAliases | ForEach-Object { "'$_'" }) -join ",$([Environment]::NewLine)`t`t")
+    )
+    Variable = @(
+        $(($PublicVariables | ForEach-Object { "'$_'" }) -join ",$([Environment]::NewLine)`t`t")
+    )
+}
+Export-ModuleMember @ExportModuleMember
+"@ | Out-File -Append -Path $ScriptModulePath
 
 [pscustomobject]@{
     PublicFunctions = $PublicFunctions
     PublicAliases   = $PublicAliases
+    PublicVariables = $PublicVariables
     SourceFiles     = $SourceFiles.FullName
     OutputFile      = Get-Item $ScriptModulePath
 }
-# Output:
-# @{
-#    [string[]]Files = < published file or source files >
-#    [string[]]PublicFunctions = < functions in /src/Public >
-#    [string[]]PublicAliases = < aliases in /src/Public >
-# }
 
