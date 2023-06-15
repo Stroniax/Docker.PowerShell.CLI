@@ -80,6 +80,6 @@ function Remove-DockerImage {
             # no images
             return
         }
-        Invoke-Docker $ArgumentList -Context $Context | Write-Debug
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Write-Debug
     }
 }

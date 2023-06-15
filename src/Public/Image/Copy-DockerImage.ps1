@@ -109,7 +109,7 @@ function Copy-DockerImage {
             $DestinationName
         )
 
-        Invoke-Docker $ArgumentList -Context $Context
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context
 
         # PassThru
         if ($? -and $PassThru) {

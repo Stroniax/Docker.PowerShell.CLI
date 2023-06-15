@@ -75,7 +75,7 @@ function Stop-DockerContainer {
         }
 
         # Stream results as they become available
-        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ForEach-Object {
             if ($PassThru) {
                 Get-DockerContainerInternal -Id $_ -Context $Context
             }

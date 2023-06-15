@@ -94,7 +94,7 @@ function Get-DockerContainer {
         }
 
 
-        Invoke-Docker $cl -Context $Context | ForEach-Object {
+        Invoke-Docker -ArgumentList $cl -Context $Context | ForEach-Object {
             [DockerContainer]$pso = $_ | ConvertFrom-Json
             $pso.PSObject.Members.Add([PSNoteProperty]::new('PSDockerContext', $Context))
 

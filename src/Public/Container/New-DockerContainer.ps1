@@ -166,7 +166,7 @@ function New-DockerContainer {
             return
         }
 
-        $Id = Invoke-Docker $ArgumentList -Context $Context 
+        $Id = Invoke-Docker -ArgumentList $ArgumentList -Context $Context 
         if ($?) {
             Get-DockerContainerInternal -Id $Id -Context $Context
         }

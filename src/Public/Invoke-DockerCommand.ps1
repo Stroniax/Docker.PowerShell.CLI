@@ -28,5 +28,5 @@ function Invoke-DockerCommand {
     $PassArgumentList = [List[string]]::new($ArgumentList)
     $PassArgumentList.Insert(0, 'exec')
     $PassArgumentList.Insert(1, $ContainerName)
-    Invoke-Docker $PassArgumentList -Context $Context
+    Invoke-Docker -ArgumentList $PassArgumentList -Context $Context
 }

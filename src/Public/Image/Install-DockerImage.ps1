@@ -115,7 +115,7 @@ function Install-DockerImage {
                 $Job
             }
             else {
-                Invoke-Docker $FullArgumentList -Context $Context | Tee-Object -Variable DockerOutput | Write-Debug
+                Invoke-Docker -ArgumentList $FullArgumentList -Context $Context | Tee-Object -Variable DockerOutput | Write-Debug
 
                 if ($? -and $PassThru) {
                     Get-DockerImage -FullName $DockerOutput[-1]

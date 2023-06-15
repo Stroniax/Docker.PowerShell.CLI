@@ -54,6 +54,6 @@ function Enter-DockerContainer {
             $Command
         )
 
-        Invoke-Docker $ArgumentList -Context $Context
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context
     }
 }

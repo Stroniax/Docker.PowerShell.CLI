@@ -140,7 +140,7 @@ function Publish-DockerImage {
                 $Job
             }
             else {
-                Invoke-Docker $FullArgumentList -Context $Context | Write-Debug
+                Invoke-Docker -ArgumentList $FullArgumentList -Context $Context | Write-Debug
                 if ($PassThru) {
                     $Image
                 }

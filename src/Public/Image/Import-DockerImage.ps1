@@ -62,7 +62,7 @@ function Import-DockerImage {
             $FullPath
         )
 
-        $Output = Invoke-Docker $ArgumentList -Context $Context
+        $Output = Invoke-Docker -ArgumentList $ArgumentList -Context $Context
 
         if ($? -and $PassThru) {
             $Id = $Output.Replace('Loaded image ID: ', '')

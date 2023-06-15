@@ -59,7 +59,7 @@ function Find-DockerImage {
             $Keyword
         )
         $Count = 0
-        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ForEach-Object {
             $pso = $_ | ConvertFrom-Json
             $pso.PSTypeNames.Insert(0, 'Docker.RemoteImage')
             $pso

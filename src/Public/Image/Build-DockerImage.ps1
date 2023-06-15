@@ -78,13 +78,13 @@ function Build-DockerImage {
 
         # Oh how I wish there were a way to write progress AND get the id of the final image
         if ($PassThru) {
-            $Id = Invoke-Docker $ArgumentList -Context $Context
+            $Id = Invoke-Docker -ArgumentList $ArgumentList -Context $Context
             if ($?) {
                 Get-DockerImage -Id $Id
             }
         }
         else {
-            Invoke-Docker $ArgumentList -Context $Context | Write-Debug
+            Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Write-Debug
         }
 
     }

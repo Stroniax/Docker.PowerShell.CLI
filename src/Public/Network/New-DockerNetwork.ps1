@@ -134,7 +134,7 @@ function New-DockerNetwork {
             return
         }
 
-        $Id = Invoke-Docker $ArgumentList -Context $Context
+        $Id = Invoke-Docker -ArgumentList $ArgumentList -Context $Context
         if ($?) {
             Get-DockerNetworkInternal -Id $Id -Context $Context
         }

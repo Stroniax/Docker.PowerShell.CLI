@@ -126,7 +126,7 @@ function Get-DockerImage {
             }
         }
 
-        Invoke-Docker $ArgumentList -Context $Context | ForEach-Object {
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ForEach-Object {
             $pso = $_ | ConvertFrom-Json
 
             if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Repository)) {

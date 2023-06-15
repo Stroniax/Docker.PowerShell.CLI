@@ -62,6 +62,6 @@ function Remove-DockerContext {
             'remove'
             $RemoveContexts
         )
-        Invoke-Docker $ArgumentList | Write-Debug
+        Invoke-Docker -ArgumentList $ArgumentList | Write-Debug
     }
 }

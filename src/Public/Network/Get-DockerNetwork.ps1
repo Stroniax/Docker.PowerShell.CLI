@@ -89,7 +89,7 @@ function Get-DockerNetwork {
             }
         )
 
-        Invoke-Docker $ArgumentList -Context $Context | ConvertFrom-Json | ForEach-Object {
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ConvertFrom-Json | ForEach-Object {
             $Network = [DockerNetwork]::new($_)
             if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $Network.Name)) {
                 return

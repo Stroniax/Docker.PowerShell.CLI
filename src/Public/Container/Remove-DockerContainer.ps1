@@ -51,7 +51,7 @@ function Remove-DockerContainer {
                     'Removing stopped containers.',
                     'Remove stopped containers?',
                     "docker $ArgumentList")) {
-                Invoke-Docker $ArgumentList -Context $Context | Out-Null
+                Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Out-Null
             }
             return
         }
@@ -83,6 +83,6 @@ function Remove-DockerContainer {
                 "docker $ArgumentList")) {
             return;
         }
-        Invoke-Docker $ArgumentList -Context $Context | Write-Debug
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Write-Debug
     }
 }

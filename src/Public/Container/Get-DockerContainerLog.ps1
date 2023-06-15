@@ -83,6 +83,6 @@ function Get-DockerContainerLog {
         }
 
         Write-Debug "$ArgumentList"
-        Invoke-Docker $ArgumentList -Context $Context
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context
     }
 }

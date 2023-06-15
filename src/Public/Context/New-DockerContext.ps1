@@ -50,7 +50,7 @@ function New-DockerContext {
                 "Create docker context '$Name' with host '$($DockerHost)'?",
                 "docker $ArgumentList"
             )) {
-            Invoke-Docker $ArgumentList 2>&1 | Write-Debug
+            Invoke-Docker -ArgumentList $ArgumentList 2>&1 | Write-Debug
             if ($?) {
                 Get-DockerContext -Name $Name
             }
