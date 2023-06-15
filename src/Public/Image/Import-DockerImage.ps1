@@ -1,5 +1,6 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 function Import-DockerImage {
     [CmdletBinding(
@@ -9,7 +10,7 @@ function Import-DockerImage {
         ConfirmImpact = [ConfirmImpact]::Low,
         PositionalBinding = $false
     )]
-    [OutputType('Docker.Image')]
+    [OutputType([DockerImage])]
     [Alias('ipdi')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName, ParameterSetName = 'Path')]

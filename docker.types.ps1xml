@@ -4,22 +4,8 @@
         <Name>Docker.Image</Name>
         <Members>
             <ScriptProperty>
-                <Name>Labels</Name>
-                <GetScriptBlock>
-                    $this.RawLabels.Split(',')
-                </GetScriptBlock>
-            </ScriptProperty>
-            <ScriptProperty>
-                <Name>Mounts</Name>
-                <GetScriptBlock>
-                    $this.RawMounts.Split(',')
-                </GetScriptBlock>
-            </ScriptProperty>
-            <ScriptProperty>
                 <Name>Created</Name>
-                <GetScriptBlock>
-                    [DateTimeOffset][string]$this.CreatedAt.Split(' ')[0..2]
-                </GetScriptBlock>
+                <GetScriptBlock>$this.CreatedAt.LocalDateTime</GetScriptBlock>
             </ScriptProperty>
             <AliasProperty>
                 <Name>Name</Name>
@@ -27,14 +13,12 @@
             </AliasProperty>
             <ScriptProperty>
                 <Name>FullName</Name>
-                <GetScriptBlock>
-                if ($this.Repository -eq '&lt;none&gt;') {
+                <GetScriptBlock>if ($this.Repository -eq '&lt;none&gt;') {
                     $this.Id
                 }
                 else {
                     $this.Repository + ':' + $this.Tag
-                }
-                </GetScriptBlock>
+                }</GetScriptBlock>
             </ScriptProperty>
             <AliasProperty>
                 <Name>Reference</Name>

@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using namespace System.Collections.ObjectModel
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 # Creates a duplicate image with a new name based on a source docker image
 # This uses the `docker image tag` command.
@@ -12,7 +13,7 @@ function Copy-DockerImage {
         ConfirmImpact = [ConfirmImpact]::Low,
         PositionalBinding = $false
     )]
-    [OutputType('Docker.Image')]
+    [OutputType([DockerImage])]
     [Alias('cpdi')]
     param(
         # Full name of the source image

@@ -1,6 +1,7 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 function Install-DockerImage {
     [CmdletBinding(
@@ -10,7 +11,7 @@ function Install-DockerImage {
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium
     )]
-    [OutputType('Docker.Image', ParameterSetName = 'FullName', 'NameTag', 'NameAllTags', 'NameDigest')]
+    [OutputType([DockerImage], ParameterSetName = 'FullName', 'NameTag', 'NameAllTags', 'NameDigest')]
     [OutputType('Docker.PowerShell.CLI.DockerPullJob', ParameterSetName = 'FullNameJob', 'NameTagJob', 'NameAllTagsJob', 'NameDigestJob')]
     [Alias('isdi')]
     param(

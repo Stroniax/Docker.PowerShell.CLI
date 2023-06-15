@@ -10,7 +10,7 @@ function Export-DockerImage {
         ConfirmImpact = [ConfirmImpact]::Low,
         PositionalBinding = $false
     )]
-    [OutputType('System.IO.FileInfo')]
+    [OutputType([System.IO.FileInfo])]
     [Alias('epdi')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName, ParameterSetName = 'FullName')]

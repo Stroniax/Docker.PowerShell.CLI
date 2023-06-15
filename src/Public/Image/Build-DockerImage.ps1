@@ -5,6 +5,7 @@ using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerBuildAddHostTransformation.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
 using module ../../Classes/EmptyHashtableArgumentCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 function Build-DockerImage {
     [CmdletBinding(
@@ -12,7 +13,7 @@ function Build-DockerImage {
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
         ConfirmImpact = [ConfirmImpact]::Medium
     )]
-    [OutputType('Docker.Image')]
+    [OutputType([DockerImage])]
     [Alias('bddi')]
     param(
         [Parameter()]

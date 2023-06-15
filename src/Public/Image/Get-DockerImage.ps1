@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using namespace System.Collections.Generic
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 function Get-DockerImage {
     [CmdletBinding(
@@ -9,7 +10,7 @@ function Get-DockerImage {
         PositionalBinding = $false,
         RemotingCapability = [RemotingCapability]::OwnedByCommand
     )]
-    [OutputType('Docker.Image')]
+    [OutputType([DockerImage])]
     [Alias('gdi')]
     param(
         [Parameter(ValueFromPipeline, Position = 0, ParameterSetName = 'Search')]
@@ -127,7 +128,7 @@ function Get-DockerImage {
         }
 
         Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ForEach-Object {
-            $pso = $_ | ConvertFrom-Json
+            [DockerImage]$pso = ConvertFrom-Json $_
 
             if (-not (Test-MultipleWildcard -WildcardPattern $Name -ActualValue $pso.Repository)) {
                 return
@@ -141,28 +142,20 @@ function Get-DockerImage {
                 return
             }
 
-            $ImageFullName = if ($pso.Repository -eq '<none>') { $pso.Id } else { "$($pso.Repository):$($pso.Tag)" }
-            if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue $ImageFullName)) {
+            if (-not (Test-MultipleWildcard -WildcardPattern $FullName -ActualValue $pso.FullName)) {
                 return
             }
 
             [void]$ReportNotMatched.Remove($pso.Id)
             [void]$ReportNotMatched.Remove($pso.Repository)
-            [void]$ReportNotMatched.Remove(($pso.Repository + ':' + $pso.Tag))
-
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawLabels', $pso.Labels))
-            $pso.PSObject.Members.Remove('Labels')
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('RawMounts', $pso.Mounts))
-            $pso.PSObject.Members.Remove('Mounts')
-            $pso.PSObject.Members.Add([PSNoteProperty]::new('Context', $Context))
-            $pso.PSTypeNames.Insert(0, 'Docker.Image')
+            [void]$ReportNotMatched.Remove($pso.FullName)
+            $pso.PSObject.Members.Add([PSNoteProperty]::new('PSDockerContext', $Context))
 
             $pso
         }
 
-        $UnmatchedMember = $PSCmdlet.ParameterSetName
         foreach ($Unmatched in $ReportNotMatched) {
-            Write-Error "No image found for $UnmatchedMember '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
+            Write-Error "No image found for $($PSCmdlet.ParameterSetName) '$Unmatched'." -Category ObjectNotFound -TargetObject $Unmatched -ErrorId 'ImageNotFound'
         }
     }
 }

@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using namespace System.Collections.Generic
 using module ../../Classes/DockerImageCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
+using module ../../Classes/DockerImage.psm1
 
 function Publish-DockerImage {
     [CmdletBinding(
@@ -11,7 +12,7 @@ function Publish-DockerImage {
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium
     )]
-    [OutputType('Docker.Image', ParameterSetName = 'FullName')]
+    [OutputType([DockerImage], ParameterSetName = 'FullName')]
     [OutputType('Docker.PowerShell.CLI.DockerPushJob', ParameterSetName = 'FullNameJob')]
     [Alias('pbdi')]
     param(
