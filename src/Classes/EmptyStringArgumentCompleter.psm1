@@ -12,7 +12,7 @@ class EmptyStringArgumentCompleter : IArgumentCompleter {
         [IDictionary]$fakeBoundParameters
     ) {
         if ($wordToComplete) {
-            return [Immutable.ImmutableList[CompletionResult]]::Empty
+            return [CompletionResult[]]::new(0)
         }
 
         return [CompletionResult[]]@(

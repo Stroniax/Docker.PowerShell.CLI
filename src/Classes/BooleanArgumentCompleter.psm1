@@ -12,7 +12,7 @@ class BooleanArgumentCompleter : IArgumentCompleter {
         [IDictionary]$fakeBoundParameters
     ) {
         if ($wordToComplete) {
-            return [Immutable.ImmutableList[CompletionResult]]::Empty
+            return [CompletionResult[]]::new(0)
         }
 
         $CompletionResults = [List[CompletionResult]]::new(3)

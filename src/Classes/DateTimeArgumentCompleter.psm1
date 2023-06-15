@@ -12,7 +12,7 @@ class DateTimeArgumentCompleter : IArgumentCompleter {
         [IDictionary]$fakeBoundParameters
     ) {
         if ($wordToComplete) {
-            return [Immutable.ImmutableList[CompletionResult]]::Empty
+            return [CompletionResult[]]::new(0)
         }
 
         $CompletionResults = [CompletionResult[]]::new(10)
