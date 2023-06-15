@@ -28,11 +28,7 @@
     {
       "label": "build-docs",
       "command": "pwsh",
-      "args": [
-        "-NoProfile",
-        "-File",
-        "${workspaceFolder}/build/build-docs.ps1"
-      ]
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/build/build-docs.ps1"]
     },
     {
       "label": "build-manifest",
@@ -47,21 +43,20 @@
         "kind": "build",
         "isDefault": true
       },
-      "dependsOn": [
-        "build-ps1xml",
-        "build-scriptmodule",
-        "build-docs"
-      ],
-      "dependsOrder": "parallel",
+      "dependsOn": ["build-ps1xml", "build-scriptmodule", "build-docs"],
+      "dependsOrder": "parallel"
     },
     {
       "label": "clean",
       "type": "shell",
-      "command": "Remove-Item",
+      "command": "pwsh",
       "args": [
+        "-Command",
+        "Remove-Item",
         "${workspaceFolder}/build/debug",
         "-Recurse"
-      ]
+      ],
+      "problemMatcher": []
     },
     {
       "label": "update-docs",
@@ -82,14 +77,30 @@
         "-Version",
         "${input:Version}"
       ],
-      "problemMatcher": [],
+      "problemMatcher": []
+    },
+    {
+      "label": "test-pester",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "Invoke-Pester -Path '${workspaceFolder}/tests'"
+      ],
+      "problemMatcher": "$pester",
+      "type": "process",
+      "dependsOn": "build-manifest",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     }
   ],
   "inputs": [
     {
       "id": "Version",
       "description": "Semantic version of module to build",
-      "type": "promptString",
+      "type": "promptString"
     }
   ]
 }

@@ -4,6 +4,7 @@ using module ../../Classes/DockerContainer.psm1
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/LowerCaseTransformation.psm1
 
 function Get-DockerContainer {
     [CmdletBinding(
@@ -19,6 +20,7 @@ function Get-DockerContainer {
         [Alias('ContainerName')]
         [SupportsWildcards()]
         [ArgumentCompleter([DockerContainerCompleter])]
+        [LowerCaseTransformation()]
         [string[]]
         $Name,
 
@@ -27,6 +29,7 @@ function Get-DockerContainer {
         [Alias('Container', 'ContainerId')]
         [SupportsWildcards()]
         [ArgumentCompleter([DockerContainerCompleter])]
+        [LowerCaseTransformation()]
         [string[]]
         $Id,
 
@@ -39,6 +42,7 @@ function Get-DockerContainer {
 
         [Parameter()]
         [ValidateSet('running', 'created', 'restarting', 'removing', 'paused', 'exited', 'dead')]
+        [LowerCaseTransformation()]
         [string[]]
         $Status,
 
@@ -62,17 +66,25 @@ function Get-DockerContainer {
 
         foreach ($s in $Status) {
             $cl.Add('--filter')
-            $cl.Add("status=$($s.ToLower())")
+            $cl.Add("status=$s")
         }
 
         foreach ($n in $Name) {
             if (![WildcardPattern]::ContainsWildcardCharacters($n)) {
                 [void]$ReportNotMatched.Add($n)
-            }
-            foreach ($w in ConvertTo-DockerWildcard $n) {
+                
                 $cl.Add('--filter')
-                $cl.Add("name=$w")
+                $cl.Add("name=$n")
+
+                continue
             }
+
+            # since --filter x=y matches ANY filter x, we can just add the longest part
+            # here (least likely to match other filters) and provide specific PowerShell
+            # filtering later
+            $filter = $n -split '[*?[\]]' | Sort-Object -Property Length -Descending | Select-Object -First 1
+            $cl.Add('--filter')
+            $cl.Add("name=$filter")
         }
 
         foreach ($l in $Label) {
@@ -83,13 +95,33 @@ function Get-DockerContainer {
             }
         }
 
+        $IdFilter = [List[string]]::new()
+        $UseIdFilter = $true
         foreach ($i in $Id) {
             if (![WildcardPattern]::ContainsWildcardCharacters($i)) {
                 [void]$ReportNotMatched.Add($i)
+                $IdFilter.Add($i)
+                continue
             }
-            foreach ($w in ConvertTo-DockerWildcard $i) {
+            if (!$UseIdFilter) {
+                continue
+            }
+            # filter id=x only matches 'x...', not '...x'. We can therefore only
+            # filter from the beginning of the string to the first wildcard character
+            $FilterParts = $i -split '[*?[\]]'
+            if ($FilterParts[0].Length -eq 0) {
+                $UseIdFilter = $false
+                continue
+            }
+            else {
+                $IdFilter.Add($FilterParts[0])
+            }
+        }
+
+        if ($UseIdFilter) {
+            foreach ($i in $IdFilter) {
                 $cl.Add('--filter')
-                $cl.Add("id=$w")
+                $cl.Add("id=$i")
             }
         }
 
@@ -117,7 +149,15 @@ function Get-DockerContainer {
         }
 
         foreach ($r in $ReportNotMatched) {
-            Write-Error "No container found for '$r'." -Category ObjectNotFound -ErrorId 'ContainerNotFound' -TargetObject $r
+            $ErrorId = if ($Id) { 'Id' } else { 'Name' }
+            $WriteError = @{
+                Message      = "The docker container '$r' was not found."
+                Exception    = [ItemNotFoundException]'The docker container was not found.'
+                Category     = 'ObjectNotFound'
+                ErrorId      = "Container${ErrorId}NotFound"
+                TargetObject = $r
+            }
+            Write-Error @WriteError
         }
     }
 }
