@@ -5,17 +5,34 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "PowerShell Integrated Console - Release Configuration",
+      "name": "PowerShell - Release Configuration",
       "type": "PowerShell",
       "request": "launch",
-      "script": "Import-Module ${workspaceFolder}/build/debug/Docker.PowerShell.CLI/Docker.PowerShell.CLI.psd1",
-      "preLaunchTask": "build-manifest"
+      "script": ". ./build/start-debugsession.ps1 -Configuration Release",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "build-manifest",
     },
     {
-      "name": "PowerShell Integrated Console - Debug Configuration",
+      "name": "PowerShell - Debug Configuration",
       "type": "PowerShell",
       "request": "launch",
-      "script": "Import-Module ${workspaceFolder}/Docker.PowerShell.CLI.psd1"
+      "script": ". ./build/start-debugsession.ps1 -Configuration Debug",
+      "createTemporaryIntegratedConsole": true,
+    },
+    {
+      "name": "PowerShell - Attach to Process",
+      "type": "PowerShell",
+      "request": "attach",
+    },
+    {
+      "windows": {
+        "script": "powershell -noexit -noprofile -file .\\build\\start-debugsession.ps1 -Configuration Release",
+      },
+      "name": "Windows PowerShell",
+      "type": "PowerShell",
+      "request": "launch",
+      "preLaunchTask": "build-manifest",
+      "createTemporaryIntegratedConsole": true,
     }
-  ]
+  ],
 }

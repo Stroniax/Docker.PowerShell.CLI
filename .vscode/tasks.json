@@ -38,7 +38,20 @@
         "kind": "build",
         "isDefault": true
       },
-      "dependsOn": ["build-ps1xml", "build-scriptmodule"]
+      "dependsOn": [
+        "build-ps1xml",
+        "build-scriptmodule"
+      ],
+      "dependsOrder": "parallel",
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "Remove-Item",
+      "args": [
+        "${workspaceFolder}/build/debug",
+        "-Recurse"
+      ]
     }
   ]
 }
