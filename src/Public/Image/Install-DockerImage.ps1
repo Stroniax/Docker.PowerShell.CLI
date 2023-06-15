@@ -11,7 +11,10 @@ function Install-DockerImage {
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium
     )]
-    [OutputType([DockerImage], ParameterSetName = 'FullName', 'NameTag', 'NameAllTags', 'NameDigest')]
+    [OutputType([DockerImage], ParameterSetName = 'FullName')]
+    [OutputType([DockerImage], ParameterSetName = 'NameTag')]
+    [OutputType([DockerImage], ParameterSetName = 'NameAllTags')]
+    [OutputType([DockerImage], ParameterSetName = 'NameDigest')]
     [OutputType('Docker.PowerShell.CLI.DockerPullJob', ParameterSetName = 'FullNameJob', 'NameTagJob', 'NameAllTagsJob', 'NameDigestJob')]
     [Alias('isdi')]
     param(
