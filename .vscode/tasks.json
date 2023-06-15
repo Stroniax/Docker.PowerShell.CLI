@@ -26,6 +26,15 @@
       "group": "build"
     },
     {
+      "label": "build-docs",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-File",
+        "${workspaceFolder}/build/build-docs.ps1"
+      ]
+    },
+    {
       "label": "build-manifest",
       "type": "shell",
       "command": "pwsh",
@@ -40,7 +49,8 @@
       },
       "dependsOn": [
         "build-ps1xml",
-        "build-scriptmodule"
+        "build-scriptmodule",
+        "build-docs"
       ],
       "dependsOrder": "parallel",
     },
@@ -51,6 +61,15 @@
       "args": [
         "${workspaceFolder}/build/debug",
         "-Recurse"
+      ]
+    },
+    {
+      "label": "update-docs",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-File",
+        "${workspaceFolder}/build/update-docs.ps1"
       ]
     }
   ]
