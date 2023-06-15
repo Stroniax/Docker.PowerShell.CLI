@@ -1,0 +1,21 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PowerShell Integrated Console - Release Configuration",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "Import-Module ${workspaceFolder}/build/debug/Docker.PowerShell.CLI/Docker.PowerShell.CLI.psd1",
+      "preLaunchTask": "build-manifest"
+    },
+    {
+      "name": "PowerShell Integrated Console - Debug Configuration",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "Import-Module ${workspaceFolder}/Docker.PowerShell.CLI.psd1"
+    }
+  ]
+}
