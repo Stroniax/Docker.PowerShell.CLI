@@ -1,9 +1,9 @@
 Describe 'Get-DockerContainer' {
     BeforeAll {
         Import-Module "$PSScriptRoot/../build/debug/Docker.PowerShell.CLI/Docker.PowerShell.CLI.psd1"
-        docker container create --name docker-powershell-cli-test1 alpine
-        docker container create --name docker-powershell-cli-test2 alpine
-        docker container create --name docker-powershell-cli-test3 alpine
+        docker container create -it --name docker-powershell-cli-test1 alpine
+        docker container create -it --name docker-powershell-cli-test2 alpine
+        docker container create -it --name docker-powershell-cli-test3 alpine
     }
     AfterAll {
         docker container rm -f docker-powershell-cli-test1 docker-powershell-cli-test2 docker-powershell-cli-test3
@@ -17,6 +17,17 @@ Describe 'Get-DockerContainer' {
 
         # Assert (user may have existing containers)
         $Containers.Count | Should -BeGreaterOrEqual 3
+    }
+
+    It 'Returns [DockerContainer]' {
+        # Arrange
+        $Expected = 'DockerContainer'
+
+        # Act
+        $Containers = Get-DockerContainer
+
+        # Assert
+        $Containers | ForEach-Object { $_.GetType().FullName | Should -Be $Expected }
     }
 
     Context 'Parameter ''-Name''' {
@@ -101,6 +112,7 @@ Describe 'Get-DockerContainer' {
             $e | Should -BeNullOrEmpty
         }
     }
+
     Context 'Parameter ''-Id''' {
         It 'filters by id' -TestCases @(
             @{ Name = 'docker-powershell-cli-test1' }
@@ -188,6 +200,85 @@ Describe 'Get-DockerContainer' {
             # Assert
             $Containers | Should -BeNullOrEmpty
             $e | Should -BeNullOrEmpty
+        }
+    }
+
+    Context 'Parameter ''-State''' {
+        BeforeAll {
+            docker container start docker-powershell-cli-test1 docker-powershell-cli-test2
+            docker container stop docker-powershell-cli-test2
+        }
+        AfterAll {
+            docker container stop docker-powershell-cli-test1
+        }
+        It 'filters by status' -TestCases @(
+            @{ Status = 'running' }
+            @{ Status = 'exited' }
+            @{ Status = 'paused' ; ExpectNone = $true }
+        ) {
+            # Arrange
+
+            # Act
+            $Containers = Get-DockerContainer -State $Status
+
+            # Assert
+            if ($ExpectNone) {
+                $Containers | Should -BeNullOrEmpty
+            }
+            else {
+                $Containers.State | ForEach-Object { $_ | Should -Be $Status }
+            }
+        }
+        It 'is case-insensitive' {
+            # Arrange
+
+            # Act
+            $Containers = Get-DockerContainer -State 'RUNNING'
+
+            # Assert
+            $Containers.State | ForEach-Object { $_ | Should -Be 'running' }
+        }
+        It 'does not return the same container twice' {
+            # Arrange
+
+            # Act
+            $Containers = Get-DockerContainer -State 'running', 'running' -ErrorAction Stop
+
+            # Assert
+            $Containers | Select-Object -Unique | Should -BeExactly $Containers
+        }
+        It 'does not report an error when no containers match' {
+            # Arrange
+
+            # Act
+            $Containers = Get-DockerContainer -State 'paused' -ErrorVariable e
+
+            # Assert
+            $Containers | Should -BeNullOrEmpty
+            $e | Should -BeNullOrEmpty
+        }
+        It 'reports an error if no container matches a specified id and status' {
+            # Arrange
+            $Id = Get-DockerContainer -Name 'docker-powershell-cli-test1' | ForEach-Object Id
+            if (!$Id) { throw 'Container is missing' }
+
+            # Act
+            $Containers = Get-DockerContainer -Id $Id -State 'exited' -ErrorVariable e
+
+            # Assert
+            $Containers | Should -BeNullOrEmpty
+            $e.FullyQualifiedErrorId | Should -Be 'ContainerIdNotFound,Get-DockerContainer'
+        }
+        It 'reports an error if no container matches a specified name and status' {
+            # Arrange
+            $Name = 'docker-powershell-cli-test1'
+
+            # Act
+            $Containers = Get-DockerContainer -Name $Name -State 'exited' -ErrorVariable e
+
+            # Assert
+            $Containers | Should -BeNullOrEmpty
+            $e.FullyQualifiedErrorId | Should -Be 'ContainerNameNotFound,Get-DockerContainer'
         }
     }
 }
