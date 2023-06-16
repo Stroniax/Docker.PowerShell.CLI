@@ -14,19 +14,19 @@ function Start-DockerContainer {
     [OutputType([DockerContainer])]
     [Alias('sadc')]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Name')]
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Name+Interactive')]
+        [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
+        [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name+Interactive')]
         [Alias('ContainerName')]
         [SupportsWildcards()]
         [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
+        [string[]]
         $Name,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Id')]
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, Position = 0, ParameterSetName = 'Id+Interactive')]
-        [ArgumentCompleter([DockerContainerCompleter])]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id+Interactive')]
         [Alias('Container', 'ContainerId')]
-        [string]
+        [ArgumentCompleter([DockerContainerCompleter])]
+        [string[]]
         $Id,
 
         # Maps to the --attach and --interactive parameters. (In the context of PowerShell, it does not make
@@ -57,15 +57,11 @@ function Start-DockerContainer {
         }
 
         $ArgumentList = @(
-            'container',
+            'container'
             'start'
+            if ($Interactive) { '--attach'; '--interactive' }
+            $Containers.Id
         )
-        $ArgumentList += $Containers.Id
-
-        if ($Interactive) {
-            $ArgumentList += '--attach'
-            $ArgumentList += '--interactive'
-        }
 
         $ShouldProcessTarget = if ($Containers.Count -eq 1) { "container '$($Containers.Id)' ($($Containers.Names))" } else { "$($Containers.Count) containers" }
         if (!$PSCmdlet.ShouldProcess(

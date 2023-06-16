@@ -1,3 +1,4 @@
+using namespace System.Collections.Generic
 using namespace System.Management.Automation
 using module ../../Classes/DockerContainerCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
@@ -15,13 +16,13 @@ function Wait-DockerContainer {
         [SupportsWildcards()]
         [Alias('ContainerName')]
         [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
+        [string[]]
         $Name,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = 'Id')]
         [Alias('Container', 'ContainerId')]
         [ArgumentCompleter([DockerContainerCompleter])]
-        [string]
+        [string[]]
         $Id,
 
         [Parameter()]
@@ -30,7 +31,22 @@ function Wait-DockerContainer {
         [string]
         $Context
     )
+    begin {
+        $ContainerIds = [HashSet[string]]::new()
+    }
     process {
-        Invoke-Docker wait $Name -Context $Context
+        $Containers = Get-DockerContainerInternal -Name $Name -Id $Id -EscapeId -Context $Context
+
+        foreach ($Container in $Containers) {
+            $ContainerIds.Add($Container.Id)
+        }
+    }
+    end {
+        if ($Containers.Count -eq 0) {
+            Write-Verbose 'No containers to process.'
+            return
+        }
+        $ArgumentList = @('wait'; $Containers.Id)
+        Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Write-Debug
     }
 }
