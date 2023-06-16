@@ -42,9 +42,10 @@ function Get-DockerContainer {
 
         [Parameter()]
         [ValidateSet('running', 'created', 'restarting', 'removing', 'paused', 'exited', 'dead')]
+        [Alias('Status')]
         [LowerCaseTransformation()]
         [string[]]
-        $Status,
+        $State,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -64,7 +65,7 @@ function Get-DockerContainer {
 
         $ReportNotMatched = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
-        foreach ($s in $Status) {
+        foreach ($s in $State) {
             $cl.Add('--filter')
             $cl.Add("status=$s")
         }
