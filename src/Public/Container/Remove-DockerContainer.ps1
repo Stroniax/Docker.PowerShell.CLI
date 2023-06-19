@@ -45,7 +45,7 @@ function Remove-DockerContainer {
             $ArgumentList = @(
                 'container'
                 'prune'
-                if ($Force) { '--force' }
+                '--force'
             )
             if ($PSCmdlet.ShouldProcess(
                     'Removing stopped containers.',
