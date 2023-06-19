@@ -10,7 +10,9 @@ param(
     $Force
 )
 
-$DocsPath = Join-Path $WorkspaceFolder -ChildPath 'docs'
+$ErrorActionPreference = 'Stop'
+
+$DocsPath = [System.IO.Path]::Combine($WorkspaceFolder, 'docs')
 $OutputFilePath = Join-Path $OutputPath 'Docker.PowerShell.CLI-help.xml'
 if (!$Force -and (Test-Path $OutputFilePath)) {
     $LastModified = (Get-Item $OutputFilePath).LastWriteTimeUtc
