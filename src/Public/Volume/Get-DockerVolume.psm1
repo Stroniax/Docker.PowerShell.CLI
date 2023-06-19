@@ -2,6 +2,7 @@ using namespace System.Management.Automation
 using namespace System.Collections.Generic
 using module ../../Private/Test-MultipleWildcard.psm1
 using module ../../Private/Invoke-Docker.psm1
+using module ../../Classes/DockerVolumeCompleter.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerVolume.psm1
 using module ../../Classes/LowerCaseTransformation.psm1
@@ -22,6 +23,7 @@ function Get-DockerVolume {
         [SupportsWildcards()]
         [ValidateNotNullOrEmpty()]
         [LowerCaseTransformation()]
+        [ArgumentCompleter([DockerVolumeCompleter])]
         [string[]]
         $Name,
 

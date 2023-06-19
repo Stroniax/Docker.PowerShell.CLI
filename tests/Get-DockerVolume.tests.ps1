@@ -3,7 +3,7 @@
 Describe 'Get-DockerVolume' {
     BeforeAll {
         if (-not (Get-Module 'Get-DockerVolume', 'Docker.PowerShell.CLI')) {
-            . "$PSScriptRoot/../src/Public/Volume/Get-DockerVolume.ps1"
+            Import-Module "$PSScriptRoot/../src/Public/Volume/Get-DockerVolume.psm1"
         }
         docker volume create --label cli.powershell.docker.test=1 --driver local 'docker-powershell-cli-test-1'
         docker volume create --label cli.powershell.docker.test=2 --driver local 'docker-powershell-cli-test-2'

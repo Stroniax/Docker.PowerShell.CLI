@@ -13,16 +13,18 @@ function ConvertTo-WordToCompleteWildcard {
         }
 
         $StartIndex = 0
-        $Length = $WordToComplete.Length - 1
+        $Length = $WordToComplete.Length
         foreach ($QuoteChar in @('''', '"')) {
             if ($WordToComplete.StartsWith($QuoteChar)) {
                 $StartIndex = 1
                 if ($WordToComplete.EndsWith($QuoteChar)) {
-                    $Length = $WordToComplete.Length - 2
+                    $Length = [Math]::Max($WordToComplete.Length - 2, 0)
                 }
                 else {
                     $Length = $WordToComplete.Length - 1
                 }
+                # Do not remove multiple quote characters
+                break
             }
         }
 
