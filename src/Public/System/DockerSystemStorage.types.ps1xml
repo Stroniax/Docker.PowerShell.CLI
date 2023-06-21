@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<Types>
+    <Type>
+        <Name>Docker.SystemStorage</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>ImageSize</Name>
+                <GetScriptBlock>$this.Images.SizeLabel</GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>ImageReclaimable</Name>
+                <GetScriptBlock>$this.Images.ReclaimableLabel</GetScriptBlock>
+            </ScriptProperty>
+
+            <ScriptProperty>
+                <Name>Volumes</Name>
+                <GetScriptBlock>$this.Categories['Local Volumes']</GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>Containers</Name>
+                <GetScriptBlock>$this.Categories['Containers']</GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>Images</Name>
+                <GetScriptBlock>$this.Categories['Images']</GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>BuildCache</Name>
+                <GetScriptBlock>$this.Categories['Build Cache']</GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>

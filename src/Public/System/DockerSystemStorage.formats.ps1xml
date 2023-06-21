@@ -1,0 +1,273 @@
+<?xml version="1.0"?>
+<Configuration>
+    <ViewDefinitions>
+        <!-- System storage -->
+        <View>
+            <Name>Docker.SystemStorage</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.SystemStorage</TypeName>
+            </ViewSelectedBy>
+            <CustomControl>
+                <CustomEntries>
+                    <CustomEntry>
+                        <CustomItem>
+                            <ExpressionBinding>
+                                <ScriptBlock>
+                                    $sb = [System.Text.StringBuilder]::new()
+
+                                    [void]$sb.Append($PSStyle.Formatting.ErrorAccent)
+                                    [void]$sb.Append('Docker System Storage').Append($PSStyle.Reset)
+                                    if ($_.PSDockerContext) {
+                                        [void]$sb.Append($PSStyle.Foreground.BrightBlack).Append(' (').Append($_.PSDockerContext).Append(')').Append($PSStyle.Reset)
+                                    }
+                                    [void]$sb.AppendLine().AppendLine()
+
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('Images').Append($PSStyle.Reset).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Size        : ').Append($PSStyle.Reset).Append($_.Images.SizeLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Reclaimable : ').Append($PSStyle.Reset).Append($_.Images.ReclaimableLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Active      : ').Append($PSStyle.Reset).Append($_.Images.ActiveCount).Append(' / ').AppendLine($_.Images.TotalCount)
+                                    [void]$sb.AppendLine()
+
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('Containers').Append($PSStyle.Reset).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Size        : ').Append($PSStyle.Reset).Append($_.Containers.SizeLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Reclaimable : ').Append($PSStyle.Reset).Append($_.Containers.ReclaimableLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Active      : ').Append($PSStyle.Reset).Append($_.Containers.ActiveCount).Append(' / ').AppendLine($_.Containers.TotalCount)
+                                    [void]$sb.AppendLine()
+
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('Volumes').Append($PSStyle.Reset).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Size        : ').Append($PSStyle.Reset).Append($_.Volumes.SizeLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Reclaimable : ').Append($PSStyle.Reset).Append($_.Volumes.ReclaimableLabel).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Active      : ').Append($PSStyle.Reset).Append($_.Volumes.ActiveCount).Append(' / ').AppendLine($_.Volumes.TotalCount)
+                                    [void]$sb.AppendLine()
+
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('Build Cache').Append($PSStyle.Reset).AppendLine()
+                                    [void]$sb.Append($PSStyle.Formatting.TableHeader).Append('  Size        : ').Append($PSStyle.Reset).Append($_.BuildCache.SizeLabel).AppendLine()
+
+
+                                    return $sb.ToString()
+                                </ScriptBlock>
+                            </ExpressionBinding>
+                        </CustomItem>
+                    </CustomEntry>
+                </CustomEntries>
+            </CustomControl>
+        </View>
+        <!-- Image storage -->
+        <View>
+            <Name>Docker.ImageStorage</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.ImageStorage</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>CreatedAt</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Size</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>SharedSize</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>UniqueSize</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Repository</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Tag</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>CreatedAt</PropertyName>
+                                <FormatString>yyyy-MM-dd</FormatString>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SharedSizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>UniqueSizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ContainerCount</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <!-- Volume storage -->
+        <View>
+            <Name>Docker.VolumeStorage</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.VolumeStorage</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Size</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>LinkCount</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SizeLabel</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <!-- Container Storage -->
+        <View>
+            <Name>Docker.ContainerStorage</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.ContainerStorage</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Size</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Names</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Image</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>LocalVolumeCount</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>CreatedAt</PropertyName>
+                                <FormatString>yyyy-MM-dd</FormatString>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <!-- Build Cache Storage -->
+        <View>
+            <Name>Docker.BuildCacheStorage</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.BuildCacheStorage</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Size</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Id</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>CacheType</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>CreatedAt</PropertyName>
+                                <FormatString>yyyy-MM-dd</FormatString>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>LastUsedAt</PropertyName>
+                                <FormatString>yyyy-MM-dd</FormatString>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>UsageCount</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Shared</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <!-- Storage Category -->
+        <View>
+            <Name>Docker.StorageCategory</Name>
+            <ViewSelectedBy>
+                <TypeName>Docker.StorageCategory</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Size</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Reclaimable</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Count (Active / Total)</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Type</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SizeLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ReclaimableLabel</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>"$($_.ActiveCount) / $($_.TotalCount)"</ScriptBlock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>
