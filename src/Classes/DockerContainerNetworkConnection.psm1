@@ -42,7 +42,10 @@ class DockerContainerNetworkConnection {
         $this.PSObject.TypeNames.Insert(1, 'Docker.PowerShell.CLI.ContainerNetworkConnection')
 
         foreach ($Property in $deserializedJson.PSObject.Properties) {
-            if ($this.PSObject.Properties[$Property.Name]) {
+            if ($Property.Name -eq 'IPAddress') {
+                $this.IPAddress = $Property.Value -as [ipaddress]
+            }
+            elseif ($this.PSObject.Properties[$Property.Name]) {
                 $this.$($Property.Name) = $Property.Value
             }
             else {
