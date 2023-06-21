@@ -75,7 +75,12 @@ function Get-DockerNetworkConnection {
         $NotMatchedNetworkId = [HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         $NetworkId.Where({ ![WildcardPattern]::ContainsWildcardCharacters($_) }).ForEach({ [void]$NotMatchedNetworkId.Add($_) })
 
-        Invoke-Docker container inspect $Containers.Id `
+        $ArgumentList = @(
+            'container'
+            'inspect'
+            $Containers.Id
+        )
+        Invoke-Docker -ArgumentList $ArgumentList `
         | ConvertFrom-Json `
         | ForEach-Object {
             $ConnectionContainerId = $_.Id
