@@ -98,12 +98,12 @@
                         <Label>ID</Label>
                     </TableColumnHeader>
                     <TableColumnHeader />
-                    <TableColumnHeader>
-                        <Label>Command</Label>
-                    </TableColumnHeader>
                     <TableColumnHeader />
                     <TableColumnHeader>
                         <Label>Status</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>Command</Label>
                     </TableColumnHeader>
                     <TableColumnHeader />
                     <TableColumnHeader />
@@ -117,9 +117,28 @@
                                     $_.ID.Substring(0, 12)
                                 </ScriptBlock>
                             </TableColumnItem>
+                            <!-- Names -->
+                            <TableColumnItem>
+                                <PropertyName>Names</PropertyName>
+                            </TableColumnItem>
                             <!-- Image -->
                             <TableColumnItem>
                                 <PropertyName>Image</PropertyName>
+                            </TableColumnItem>
+                            <!-- Status -->
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    $Color = switch ($_.State) {
+                                        'created' { $PSStyle.Foreground.BrightYellow }
+                                        'dead' { $PSStyle.Foreground.Red }
+                                        'exited' { $PSStyle.Foreground.BrightRed }
+                                        'paused' { $PSStyle.Foreground.BrightYellow }
+                                        'removing' { $PSStyle.Foreground.BrightBlack }
+                                        'restarting' { $PSStyle.Foreground.BrightYellow }
+                                        'running' { $PSStyle.Foreground.BrightCyan }
+                                    }
+                                    "$Color$($_.Status)$($PSStyle.Reset)"
+                                </ScriptBlock>
                             </TableColumnItem>
                             <!-- Command -->
                             <TableColumnItem>
@@ -138,28 +157,9 @@
                                 <PropertyName>Created</PropertyName>
                                 <FormatString>yyyy-MM-dd HH:mm:ss zzzz</FormatString>
                             </TableColumnItem>
-                            <!-- Status -->
-                            <TableColumnItem>
-                                <ScriptBlock>
-                                    $Color = switch ($_.State) {
-                                        'created' { $PSStyle.Foreground.BrightYellow }
-                                        'dead' { $PSStyle.Foreground.Red }
-                                        'exited' { $PSStyle.Foreground.BrightRed }
-                                        'paused' { $PSStyle.Foreground.BrightYellow }
-                                        'removing' { $PSStyle.Foreground.BrightBlack }
-                                        'restarting' { $PSStyle.Foreground.BrightYellow }
-                                        'running' { $PSStyle.Foreground.BrightCyan }
-                                    }
-                                    "$Color$($_.Status)$($PSStyle.Reset)"
-                                </ScriptBlock>
-                            </TableColumnItem>
                             <!-- Ports -->
                             <TableColumnItem>
                                 <PropertyName>Ports</PropertyName>
-                            </TableColumnItem>
-                            <!-- Names -->
-                            <TableColumnItem>
-                                <PropertyName>Names</PropertyName>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>
