@@ -89,19 +89,23 @@
                 <Name>Attributes</Name>
                 <GetScriptBlock>
                     @(
-                        $this.Stars
-                        if ($this.Official) { 'O' }
-                        if ($this.Automated) { 'A' }
+                        $this.StarCount
+                        if ($this.IsOfficial) { 'O' }
+                        if ($this.IsAutomated) { 'A' }
                     )
                 </GetScriptBlock>
             </ScriptProperty>
             <AliasProperty>
-                <Name>IsAutomated</Name>
-                <ReferencedMemberName>Automated</ReferencedMemberName>
+                <Name>Automated</Name>
+                <ReferencedMemberName>IsAutomated</ReferencedMemberName>
             </AliasProperty>
             <AliasProperty>
-                <Name>IsOfficial</Name>
-                <ReferencedMemberName>Official</ReferencedMemberName>
+                <Name>Official</Name>
+                <ReferencedMemberName>IsOfficial</ReferencedMemberName>
+            </AliasProperty>
+            <AliasProperty>
+                <Name>Stars</Name>
+                <ReferencedMemberName>StarCount</ReferencedMemberName>
             </AliasProperty>
         </Members>
     </Type>

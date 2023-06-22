@@ -220,19 +220,32 @@
                 <TypeName>Docker.RemoteImage</TypeName>
             </ViewSelectedBy>
             <TableControl>
+                <AutoSize />
                 <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
                     <TableColumnHeader />
                     <TableColumnHeader />
                     <TableColumnHeader />
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
+                        <Wrap />
                         <TableColumnItems>
                             <TableColumnItem>
                                 <PropertyName>Name</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>Attributes</PropertyName>
+                                <PropertyName>StarCount</PropertyName>
+                                <Alignment>Right</Alignment>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>IsOfficial</PropertyName>
+                                <Alignment>Center</Alignment>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>IsAutomated</PropertyName>
+                                <Alignment>Center</Alignment>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>Description</PropertyName>

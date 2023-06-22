@@ -3,12 +3,15 @@ using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/BooleanArgumentCompleter.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
 using module ../../Classes/NumericArgumentCompleter.psm1
+using module ../../Classes/DockerRemoteImage.psm1
 
 function Find-DockerImage {
     [CmdletBinding(
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false
     )]
+    [OutputType([DockerRemoteImage])]
+    [Alias('fddi')]
     param(
         [Parameter(Mandatory, Position = 0)]
         [ArgumentCompleter([EmptyStringArgumentCompleter])]
@@ -60,9 +63,7 @@ function Find-DockerImage {
         )
         $Count = 0
         Invoke-Docker -ArgumentList $ArgumentList -Context $Context | ForEach-Object {
-            $pso = $_ | ConvertFrom-Json
-            $pso.PSTypeNames.Insert(0, 'Docker.RemoteImage')
-            $pso
+            [DockerRemoteImage]($_ | ConvertFrom-Json)
 
             if ((++$Count) -eq $Limit -and !($PSBoundParameters.ContainsKey('Limit'))) {
                 Write-Warning "The number of results has reached the default limit of $Limit. There may be more results available. Use the -Limit parameter to increase the limit."
