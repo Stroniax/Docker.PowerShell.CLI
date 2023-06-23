@@ -94,6 +94,16 @@
         "kind": "test",
         "isDefault": true
       }
+    },
+    {
+      "label": "test-pester-dind",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-File",
+        "${workspaceFolder}/tests/Test-Docker.ps1"
+      ],
+      "problemMatcher": "$pester",
     }
   ],
   "inputs": [

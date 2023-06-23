@@ -1,6 +1,13 @@
-# Build: docker build -t dind-pwsh .
-# This dockerfile creates an image of docker-in-docker with PowerShell installed
-# dind-pwsh is the base image for containers used for testing the docker.powershell.cli module
+# INSTRUCTIONS
+# To build this image, run the following command from the root of the repository
+# (parent directory of this script):
+#
+# PS /> docker build -t docker-powershell-cli/dind .
+#
+# To enter the container, run the following command:
+#
+# PS /> docker run -it --rm --privileged docker-powershell-cli/dind
+
 
 FROM docker:dind as dind-pwsh
 
@@ -113,13 +120,13 @@ COPY ./tests ./tests
 COPY --from=build-manifest ./out ./src/Docker.PowerShell.CLI
 
 # Run the tests
-RUN Import-Module ./src/Docker.PowerShell.CLI && \
-    Invoke-Pester -Configuration (\New-PesterConfiguration @{ \
+ENTRYPOINT pwsh -wd /usr/local/bin -c /usr/local/bin/dockerd-entrypoint.sh &; \
+    Import-Module ./src/Docker.PowerShell.CLI && \
+    Invoke-Pester -Configuration (New-PesterConfiguration @{ \
         Run = @{ \
             Path = './tests'; \
             Exit = $true; \
             Throw = $true; \
-            PassThru = $true; \
         }; \
         Output = @{ \
             Verbosity = 'Detailed'; \
@@ -130,6 +137,5 @@ RUN Import-Module ./src/Docker.PowerShell.CLI && \
 FROM dind-pwsh as docker-powershell-cli
 
 COPY --from=build-manifest ./out ./src/Docker.PowerShell.CLI
-# COPY --from=test ./src/Docker.PowerShell.CLI ./src/Docker.PowerShell.CLI
 
 ENTRYPOINT ["pwsh", "-NoExit", "-c", "pwsh -wd /usr/local/bin -c /usr/local/bin/dockerd-entrypoint.sh &", "Import-Module ./src/Docker.PowerShell.CLI"]
