@@ -2,7 +2,7 @@
 
 param(
     [string]
-    $WorkspaceFolder = (Split-Path $PSScriptRoot -Parent),
+    $SourcePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'src'),
 
     [string]
     $OutputPath = (Join-Path $PSScriptRoot 'debug/Docker.PowerShell.CLI'),
@@ -16,7 +16,7 @@ if (-not (Test-Path $OutputPath)) {
 }
 
 $TypesFilePath = Join-Path $OutputPath 'Docker.PowerShell.CLI.types.ps1xml'
-$TypeFiles = Get-ChildItem $WorkspaceFolder -Exclude build, tests | Get-ChildItem -Recurse -Include '*.types.ps1xml'
+$TypeFiles = Get-ChildItem $SourcePath -Recurse -Include '*.types.ps1xml'
 
 if (!$Force -and (Test-Path $TypesFilePath)) {
     $UpdateTypes = $false
@@ -51,7 +51,7 @@ else {
 }
 
 $FormatsFilePath = Join-Path $OutputPath 'Docker.PowerShell.CLI.formats.ps1xml'
-$FormatFiles = Get-ChildItem $WorkspaceFolder -Exclude build, tests | Get-ChildItem -Recurse -Include '*.formats.ps1xml'
+$FormatFiles = Get-ChildItem $SourcePath -Recurse -Include '*.formats.ps1xml'
 
 if (!$Force -and (Test-Path $FormatsFilePath)) {
     $LastModified = (Get-Item $FormatsFilePath).LastWriteTimeUtc

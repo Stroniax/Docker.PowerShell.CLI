@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]
-    $WorkspaceFolder = (Split-Path $PSScriptRoot -Parent),
+    $SourcePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'src'),
 
     [string]
     $OutputPath = (Join-Path $PSScriptRoot 'debug/Docker.PowerShell.CLI'),
@@ -44,7 +44,7 @@ function Resolve-RelativePath ($From, $Path) {
     Pop-Location
 }
 
-$SourceFiles = Get-ChildItem $WorkspaceFolder -Exclude build, tests | Get-ChildItem -Recurse -Include '*.ps1', '*.psm1' -Exclude debugmodule.psm1
+$SourceFiles = Get-ChildItem $SourcePath -Recurse -Include '*.ps1', '*.psm1' -Exclude debugmodule.psm1
 
 if (!$Force -and (Test-Path $ScriptModulePath)) {
     $LastModified = (Get-Item $ScriptModulePath).LastWriteTimeUtc

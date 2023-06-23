@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 param(
     [string]
-    $WorkspaceFolder = (Split-Path $PSScriptRoot -Parent),
+    $SourcePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'src'),
 
     [string]
     $OutputPath = (Join-Path $PSScriptRoot 'debug/Docker.PowerShell.CLI'),

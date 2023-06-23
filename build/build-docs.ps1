@@ -1,7 +1,7 @@
 #Requires -Module PlatyPS
 param(
     [string]
-    $WorkspaceFolder = (Split-Path $PSScriptRoot -Parent),
+    $SourcePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'docs'),
 
     [string]
     $OutputPath = (Join-Path $PSScriptRoot 'debug/Docker.PowerShell.CLI'),
@@ -12,12 +12,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$DocsPath = [System.IO.Path]::Combine($WorkspaceFolder, 'docs')
 $OutputFilePath = Join-Path $OutputPath 'Docker.PowerShell.CLI-help.xml'
 if (!$Force -and (Test-Path $OutputFilePath)) {
     $LastModified = (Get-Item $OutputFilePath).LastWriteTimeUtc
     $UpdateDocs = $false
-    foreach ($Item in Get-ChildItem $DocsPath -Recurse -Filter '*.md') {
+    foreach ($Item in Get-ChildItem $SourcePath -Recurse -Filter '*.md') {
         if ($Item.LastWriteTimeUtc -gt $LastModified) {
             $UpdateDocs = $true
             break
@@ -36,4 +35,4 @@ if (!$UpdateDocs) {
 
 Write-Host "$OutputFilePath is being updated" -ForegroundColor Magenta
 
-New-ExternalHelp -Path $DocsPath -OutputPath $OutputPath -Force
+New-ExternalHelp -Path $SourcePath -OutputPath $OutputPath -Force
