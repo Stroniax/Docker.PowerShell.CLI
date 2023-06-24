@@ -11,6 +11,8 @@ function Remove-DockerContainer {
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium
     )]
+    [OutputType([System.Management.Automation.Internal.AutomationNull])]
+    [Alias('rdc')]
     param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Name')]
         [Alias('ContainerName')]
@@ -81,7 +83,7 @@ function Remove-DockerContainer {
                 "Removing $ShouldProcessTarget.",
                 "Remove $ShouldProcessTarget?",
                 "docker $ArgumentList")) {
-            return;
+            return
         }
         Invoke-Docker -ArgumentList $ArgumentList -Context $Context | Write-Debug
     }
