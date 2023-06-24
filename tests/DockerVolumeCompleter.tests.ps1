@@ -1,21 +1,24 @@
 #Requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
+#Requires -Version 6.0
 
 Describe '[DockerVolumeCompleter]' {
     BeforeAll {
-        [string]$ModuleName = Get-Module 'DockerVolumeCompleter', 'Docker.PowerShell.CLI'
-        if (-not $ModuleName) {
-            $ModuleName = 'DockerVolumeCompleter'
-            Import-Module "$PSScriptRoot/../src/Classes/DockerVolumeCompleter.psm1"
+        $global:PSModuleAutoLoadingPreference = 'None'
+        $script:Module = Get-Module 'Docker.PowerShell.CLI'
+        if (-not $script:Module) {
+            $script:RemoveModule = $script:Module = Import-Module "$PSScriptRoot/../Docker.PowerShell.CLI.psd1" -Force -PassThru -ArgumentList $true
         }
-        if (-not (Get-Module 'Get-DockerVolume', 'Docker.PowerShell.CLI')) {
-            Import-Module "$PSScriptRoot/../src/Public/Volume/Get-DockerVolume.psm1"
-        }
-        $Type = & (Get-Module $ModuleName) { [DockerVolumeCompleter] }
-        $Completer = [Activator]::CreateInstance($Type)
+        $script:Type = & $script:Module { [DockerVolumeCompleter] }
+        $script:Completer = [Activator]::CreateInstance($Type)
+
+        $script:MockModule = (Get-Module 'DockerVolumeCompleter' -All) ?? (Get-Module 'Docker.PowerShell.CLI')
+    }
+    AfterAll {
+        $script:RemoveModule | Where-Object { $_ } | Remove-Module -Force
     }
     Context 'with volumes' {
         BeforeAll {
-            Mock Get-DockerVolume -ModuleName $ModuleName {
+            Mock Get-DockerVolume -Verifiable -ModuleName $script:MockModule.Name {
                 param($Name)
                 @(
                     [pscustomobject]@{ Name = 'test1-uno'; Scope = 'local'; Driver = 'local'; Group = 'N/A' }
@@ -39,7 +42,7 @@ Describe '[DockerVolumeCompleter]' {
             $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
             # Assert
-            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ModuleName $ModuleName
+            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ModuleName $script:MockModule.Name
         }
         It 'should pass -Context from bound parameters to Get-DockerVolume' -TestCases @(
             @{ CommandName = 'Get-DockerVolume'; ParameterName = 'Name'; WordToComplete = 'test'; FakeBoundParameters = @{} }
@@ -48,10 +51,10 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, $FakeBoundParameters)
+            $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, $FakeBoundParameters)
 
             # Assert
-            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { $Context -eq $FakeBoundParameters.Context } -ModuleName $ModuleName
+            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { $Context -eq $FakeBoundParameters.Context } -ModuleName $script:MockModule.Name
         }
         It 'should pass a wildcarded term to Get-DockerVolume' -TestCases @(
             @{ CommandName = ''; ParameterName = ''; WordToComplete = 'test' }
@@ -59,10 +62,10 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
             
             # Act
-            $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
+            $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
             # Assert
-            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { [WildcardPattern]::ContainsWildcardCharacters($Name) } -ModuleName $ModuleName
+            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { [WildcardPattern]::ContainsWildcardCharacters($Name) } -ModuleName $script:MockModule.Name
         }
         It 'should trim quotes in call to Get-DockerVolume' -TestCases @(
             @{ CommandName = 'Get-DockerVolume'; ParameterName = 'Name'; WordToComplete = "'test"; Expected = 'test*' }
@@ -73,10 +76,10 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
+            $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
             # Assert
-            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { $Name -eq $Expected } -ModuleName $ModuleName
+            Should -Invoke Get-DockerVolume -Exactly -Times 1 -ParameterFilter { $Name -eq $Expected } -ModuleName $script:MockModule.Name
         }
         It 'should complete using matches' -TestCases @(
             @{ CommandName = 'Get-DockerVolume'; ParameterName = 'Name'; WordToComplete = 'test'; Expected = 'test1-uno', 'test2-dos', 'test3-tres', 'test4-quatro' }
@@ -87,7 +90,7 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Result = $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
+            $Result = $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
             # Assert
             $Result.CompletionText | Should -Be $Expected
@@ -102,7 +105,7 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Result = $Completer.CompleteArgument('Get-DockerVolume', 'Name', $WordToComplete, $null, @{})
+            $Result = $script:Completer.CompleteArgument('Get-DockerVolume', 'Name', $WordToComplete, $null, @{})
 
             # Assert
             $Result.CompletionText | Should -Be $Expected
@@ -110,7 +113,7 @@ Describe '[DockerVolumeCompleter]' {
     }
     Context 'without volumes' {
         BeforeAll {
-            Mock Get-DockerVolume -ModuleName $ModuleName {
+            Mock Get-DockerVolume -ModuleName $script:MockModule.Name {
                 param(
                     [string]$Name
                 )
@@ -131,7 +134,7 @@ Describe '[DockerVolumeCompleter]' {
                 $ErrorActionPreference = 'Stop'
 
                 # Act
-                $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
+                $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
                 # Assert
             } | Should -Not -Throw
@@ -146,7 +149,7 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Completions = $Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
+            $Completions = $script:Completer.CompleteArgument($CommandName, $ParameterName, $WordToComplete, $null, @{})
 
             # Assert
             $Completions | Should -BeNullOrEmpty
@@ -154,7 +157,7 @@ Describe '[DockerVolumeCompleter]' {
     }
     Context 'when docker is unavailable' {
         BeforeAll {
-            Mock Get-DockerVolume -ModuleName $ModuleName {
+            Mock Get-DockerVolume -ModuleName $script:MockModule.Name {
                 Write-Error 'docker: docker daemon unreachable'
             }
         }
@@ -162,7 +165,7 @@ Describe '[DockerVolumeCompleter]' {
             # Arrange
 
             # Act
-            $Completions = $Completer.CompleteArgument('Get-DockerVolume', 'Name', 'test', $null, @{})
+            $Completions = $script:Completer.CompleteArgument('Get-DockerVolume', 'Name', 'test', $null, @{})
 
             # Assert
             $Completions.Count | Should -Be 0

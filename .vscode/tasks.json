@@ -85,7 +85,7 @@
       "args": [
         "-NoProfile",
         "-Command",
-        "Invoke-Pester -Path '${workspaceFolder}/tests'"
+        "Import-Module '${workspaceFolder}/build/debug/Docker.PowerShell.CLI' && Invoke-Pester -Path '${workspaceFolder}/tests'"
       ],
       "problemMatcher": "$pester",
       "type": "process",
@@ -93,7 +93,7 @@
       "group": {
         "kind": "test",
         "isDefault": true
-      }
+      },
     },
     {
       "label": "test-pester-dind",

@@ -2,8 +2,9 @@
 
 Describe 'Get-DockerVolume' {
     BeforeAll {
-        if (-not (Get-Module 'Get-DockerVolume', 'Docker.PowerShell.CLI')) {
-            Import-Module "$PSScriptRoot/../src/Public/Volume/Get-DockerVolume.psm1"
+        $Module = Get-Module 'Docker.PowerShell.CLI'
+        if (-not $Module) {
+            $script:RemoveModule = Import-Module "$PSScriptRoot/../Docker.PowerShell.CLI.psd1" -PassThru -Force
         }
         docker volume create --label cli.powershell.docker.test=1 --driver local 'docker-powershell-cli-test-1'
         docker volume create --label cli.powershell.docker.test=2 --driver local 'docker-powershell-cli-test-2'
@@ -11,6 +12,7 @@ Describe 'Get-DockerVolume' {
     }
     AfterAll {
         docker volume remove 'docker-powershell-cli-test-1' 'docker-powershell-cli-test-2' 'docker-powershell-cli-test-3'
+        $script:RemoveModule | Where-Object { $_ } | Remove-Module
     }
     It 'Gets all volumes' {
         # Arrange

@@ -6,7 +6,7 @@ using namespace System.Collections.Generic
 function Remove-DockerNetwork {
     [CmdletBinding(
         DefaultParameterSetName = 'Id',
-        RemotingCapability = [RemotingCapability]::None,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium

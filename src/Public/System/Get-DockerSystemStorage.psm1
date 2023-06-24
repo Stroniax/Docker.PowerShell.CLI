@@ -1,7 +1,7 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerSystemStorage.psm1
 using module ../../Classes/DockerContextCompleter.psm1
-using module ../../Private/Invoke-Docker.psm1
+using module ../../Private/Invoke-Docker.ps1
 
 function Get-DockerSystemStorage {
     [CmdletBinding(

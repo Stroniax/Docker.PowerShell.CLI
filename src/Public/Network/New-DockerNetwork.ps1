@@ -5,13 +5,15 @@ using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
 using module ../../Classes/EmptyIpAddressArgumentCompleter.psm1
 using module ../../Classes/EmptyHashtableArgumentCompleter.psm1
+using module ../../Private/Invoke-Docker.ps1
+using module ../../Private/Get-DockerNetworkInternal.ps1
 using namespace System.Management.Automation
 using namespace System.Collections.Generic
 
 function New-DockerNetwork {
     [CmdletBinding(
         DefaultParameterSetName = 'Default',
-        RemotingCapability = [RemotingCapability]::None,
+        RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
         SupportsShouldProcess,
         ConfirmImpact = [ConfirmImpact]::Medium
@@ -134,8 +136,8 @@ function New-DockerNetwork {
             return
         }
 
-        $Id = Invoke-Docker -ArgumentList $ArgumentList -Context $Context
-        if ($?) {
+        $Id = Invoke-Docker -ArgumentList $ArgumentList -Context $Context -ErrorVariable e
+        if ($? -and $e.Count -eq 0) {
             Get-DockerNetworkInternal -Id $Id -Context $Context
         }
     }

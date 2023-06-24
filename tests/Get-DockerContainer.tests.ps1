@@ -1,12 +1,16 @@
 Describe 'Get-DockerContainer' {
     BeforeAll {
-        Import-Module "$PSScriptRoot/../build/debug/Docker.PowerShell.CLI/Docker.PowerShell.CLI.psd1"
+        $script:Module = Get-Module Docker.PowerShell.CLI
+        if (-not $script:Module) {
+            $script:RemoveModule = Import-Module "$PSScriptRoot/../Docker.PowerShell.CLI.psd1" -PassThru -Force
+        }
         docker container create -it --name docker-powershell-cli-test1 alpine
         docker container create -it --name docker-powershell-cli-test2 alpine
         docker container create -it --name docker-powershell-cli-test3 alpine
     }
     AfterAll {
         docker container rm -f docker-powershell-cli-test1 docker-powershell-cli-test2 docker-powershell-cli-test3
+        $script:RemoveModule | Where-Object { $_ } | Remove-Module -Force
     }
 
     It 'Returns all containers' {
@@ -90,7 +94,7 @@ Describe 'Get-DockerContainer' {
             $Name = 'docker-powershell-cli-test4'
 
             # Act
-            $Containers = Get-DockerContainer -Name $Name -ErrorVariable e
+            $Containers = Get-DockerContainer -Name $Name -ErrorVariable e -ErrorAction SilentlyContinue
 
             # Assert
             $Containers | Should -BeNullOrEmpty
@@ -180,7 +184,7 @@ Describe 'Get-DockerContainer' {
             $Id = 'zzinvalidzz'
 
             # Act
-            $Containers = Get-DockerContainer -Id $Id -ErrorVariable e
+            $Containers = Get-DockerContainer -Id $Id -ErrorVariable e -ErrorAction SilentlyContinue
 
             # Assert
             $Containers | Should -BeNullOrEmpty
@@ -263,7 +267,7 @@ Describe 'Get-DockerContainer' {
             if (!$Id) { throw 'Container is missing' }
 
             # Act
-            $Containers = Get-DockerContainer -Id $Id -State 'exited' -ErrorVariable e
+            $Containers = Get-DockerContainer -Id $Id -State 'exited' -ErrorVariable e -ErrorAction SilentlyContinue
 
             # Assert
             $Containers | Should -BeNullOrEmpty
@@ -274,7 +278,7 @@ Describe 'Get-DockerContainer' {
             $Name = 'docker-powershell-cli-test1'
 
             # Act
-            $Containers = Get-DockerContainer -Name $Name -State 'exited' -ErrorVariable e
+            $Containers = Get-DockerContainer -Name $Name -State 'exited' -ErrorVariable e -ErrorAction SilentlyContinue
 
             # Assert
             $Containers | Should -BeNullOrEmpty

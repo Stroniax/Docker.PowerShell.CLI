@@ -29,9 +29,11 @@ function Prompt {
         $ModuleText += "-$($script:Module.PrivateData.PSData.Prerelease)";
     }; 
     "$($PSStyle.Foreground.BrightBlack)" +
-    "$($ElapsedTime.ToString('mm\:ss\.fff'))`r`n@ $pwd" +
-    "$($PSStyle.Reset)`n" +
+    "$($ElapsedTime.ToString('mm\:ss\.fff')) - Finished at " +
+    $LastCommand.EndExecutionTime.ToString('HH:mm:ss.fff') +
+    "`r`n@ $pwd$($PSStyle.Reset)`n" +
     "[$($PSStyle.Foreground.Yellow)$PID$($PSStyle.Reset)] " +
     "$ModuleText> "
 }
 
+Set-PSReadLineOption -PredictionSource HistoryAndPlugin -PredictionViewStyle ListView
