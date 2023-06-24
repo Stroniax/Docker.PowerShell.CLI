@@ -13,7 +13,9 @@
                         <Label>Id</Label>
                     </TableColumnHeader>
                     <TableColumnHeader />
-                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Scope</Label>
+                    </TableColumnHeader>
                     <TableColumnHeader />
                 </TableHeaders>
                 <TableRowEntries>
@@ -29,7 +31,10 @@
                                 <PropertyName>Driver</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>Scope</PropertyName>
+                                <ScriptBlock>
+                                    $Color = if ($_.Scope -eq 'local') { $PSStyle.Foreground.Blue } else { $PSStyle.Foreground.Magenta }
+                                    $Color + $_.Scope + $PSStyle.Reset
+                                </ScriptBlock>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>Internal</PropertyName>
