@@ -39,7 +39,14 @@ function Get-DockerContext {
         }
 
         foreach ($Unmatched in $ReportNotMatched) {
-            Write-Error "No context found with name '$Unmatched'." -Category ObjectNotFound -ErrorId 'ContextNotFound' -TargetObject $Unmatched
+            $WriteError = @{
+                Message      = "No context found with the specified name '$Unmatched'."
+                Exception    = [ItemNotFoundException]'No context found with the specified name.'
+                Category     = 'ObjectNotFound'
+                ErrorId      = 'ContextNameNotFound'
+                TargetObject = $Unmatched
+            }
+            Write-Error @WriteError
         }
     }
 }
