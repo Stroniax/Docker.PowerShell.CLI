@@ -3,6 +3,21 @@ using module ../../Classes/ValidateDockerContext.psm1
 using module ../../Classes/DockerContextCompleter.psm1
 using module ../../Classes/DockerContext.psm1
 using module ../../Classes/EmptyScriptBlockArgumentCompleter.psm1
+using module ../../Classes/LowerCaseTransformation.psm1
+
+function Test-DockerContext {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [string]
+        $Name
+    )
+    process {
+        $Context = Invoke-Docker context list --format '{{ .Name }}'
+
+        $Context -contains $Name
+    }
+}
 
 function Use-DockerContext {
     [CmdletBinding(
@@ -17,7 +32,7 @@ function Use-DockerContext {
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [Alias('ContextName')]
-        [ValidateDockerContext()]
+        [LowerCaseTransformation()]
         [ArgumentCompleter([DockerContextCompleter])]
         [string]
         $Name,
@@ -33,18 +48,34 @@ function Use-DockerContext {
         $PassThru
     )
     process {
+        if (-not (Test-DockerContext $Name)) {
+            $WriteError = @{
+                Message      = "No context found with the specified name '$Unmatched'."
+                Exception    = [ItemNotFoundException]'No context found with the specified name.'
+                Category     = 'ObjectNotFound'
+                ErrorId      = 'ContextNameNotFound'
+                TargetObject = $Unmatched
+                ErrorAction  = 'Stop'
+            }
+            Write-Error @WriteError
+            return
+        }
+
+        # docker context use $Name writes the second line:
+        # Current context is now "$Name"
+        # to the error stream, so we can ignore it by redirecting it to the debug stream.
         if ($ScriptBlock) {
             $Context = Invoke-Docker context show
-            Invoke-Docker context use $Name | Write-Debug
+            Invoke-Docker context use $Name 2>&1 | Write-Debug
             try {
                 & $ScriptBlock
             }
             finally {
-                Invoke-Docker context use $Context
+                Invoke-Docker context use 2>&1 $Context | Write-Debug
             }
         }
         else {
-            Invoke-Docker context use $Name | Write-Debug
+            Invoke-Docker context use $Name 2>&1 | Write-Debug
             if ($? -and $PassThru) {
                 Get-DockerContext -Name $Name
             }
