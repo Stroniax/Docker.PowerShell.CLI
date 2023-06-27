@@ -42,29 +42,130 @@ Describe 'Use-DockerContext' {
         # Assert
         docker context show | Should -Be $Name
     }
-    Context 'ScriptBlock' {
-        It 'runs the script inside the specified context' {
+    It 'calls Invoke-Docker context use' {
+        Mock Invoke-Docker -ModuleName $script:Module.Name { } -ParameterFilter { $ArgumentList -contains 'context' -and $ArgumentList -contains 'use' }
 
-        }
-        It 'reverts to the original context after the script' {
+        Use-DockerContext 'docker-powershell-cli-test-1'
 
-        }
-        It 'reverts even when the script fails' {
-
-        }
-        It 'outputs the script output' {
-
-        }
-        It 'does not run the script when the context is not found' {
-
-        }
+        Should -Invoke Invoke-Docker -Exactly -Times 1 -ModuleName $script:Module.Name
     }
-    Context 'Parameter ''-PassThru''' {
-        It 'returns nothing when $false' {
+    Context 'ScriptBlock' {
+        BeforeEach {
+            docker context use $script:PreviousDockerContext 2>&1 | Out-Null
+        }
+        It 'runs the script inside the specified context' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+        ) {
             # Arrange
 
             # Act
-            $Output = Use-DockerContext 'docker-powershell-cli-test-1' -PassThru:$false
+            Use-DockerContext $Name {
+                # Assert
+                docker context show | Should -Be $Name
+            }
+        }
+        It 'reverts to the previous context' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+            @{ Name = 'docker-powershell-cli-test-2' }
+        ) {
+            # Arrange
+            
+            # Act
+            Use-DockerContext $Name { }
+
+            # Assert
+            docker context show | Should -Be $script:PreviousDockerContext
+        }
+        It 'reverts even when the script fails' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+        ) {
+            # Arrange
+            $Script = {
+                throw 'Script failure'
+            }
+
+            # Act
+            { Use-DockerContext $Name $Script } | Should -Throw
+
+            # Assert
+            docker context show | Should -Be $script:PreviousDockerContext
+        }
+        It 'outputs the script output' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1'; Result = 42 }
+        ) {
+            # Arrange
+            $Script = { $Result }
+
+            # Act
+            $Actual = Use-DockerContext $Name $Script
+
+            # Assert
+            $Actual | Should -Be $Result
+        }
+        It 'fails when the script fails' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+        ) {
+            # Arrange
+            $Script = {
+                throw 'Script failure'
+            }
+
+            # Act
+            { Use-DockerContext $Name $Script -ErrorAction Stop } | Should -Throw
+        }
+        It 'does not run the script when the context is not found' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-3' }
+        ) {
+            # Arrange
+            $Ran = $false
+            $Script = { $Ran = $true }
+
+            # Act
+            try { Use-DockerContext $Name $Script } catch { }
+
+            # Assert
+            $Ran | Should -BeFalse
+        }
+        # This test ensures we can run the script 'inline' as if it were being run directly by the
+        # caller. This will ensure that variables, etc., can be set inside the script.
+        It 'runs the script in the function call scope' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+        ) {
+            # Arrange
+            $script:VariableValue = 'before'
+
+            # Act
+            Use-DockerContext $Name {
+                $script:VariableValue = 'after'
+            }
+
+            # Assert
+            $VariableValue | Should -Be 'after'
+        }
+        It 'doesn''t expose module internals' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+        ) {
+            # Arrange
+            $Script = {
+                Get-Command Invoke-Docker -ErrorAction Ignore
+            }
+
+            # Act
+            $Actual = Use-DockerContext $Name $Script
+
+            # Assert
+            $Actual | Should -BeNullOrEmpty
+        }
+    }
+    Context 'Parameter ''-PassThru''' {
+        It 'returns nothing when $false' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-1' }
+            @{ Name = 'docker-powershell-cli-test-2' }
+        ) {
+            # Arrange
+
+            # Act
+            $Output = Use-DockerContext $Name -PassThru:$false
 
             # Assert
             $Output | Should -BeNullOrEmpty
@@ -81,13 +182,6 @@ Describe 'Use-DockerContext' {
             # Assert
             $Output.GetType().Name | Should -Be 'DockerContext'
         }
-        It 'calls Invoke-Docker context use' {
-            Mock Invoke-Docker -ModuleName $script:Module.Name { } -ParameterFilter { $ArgumentList -contains 'context' -and $ArgumentList -contains 'use' }
-
-            Use-DockerContext 'docker-powershell-cli-test-1'
-
-            Should -Invoke Invoke-Docker -Exactly -Times 1 -ModuleName $script:Module.Name
-        }
     }
     Context 'Parameter ''-Name''' {
         It 'is case-insensitive' -TestCases @(
@@ -102,6 +196,18 @@ Describe 'Use-DockerContext' {
             # Assert
             $Output.Name | Should -Be $Name
         }
+        It 'does not support wildcards' -TestCases @(
+            @{ Name = 'docker-powershell-cli-test-*' }
+            @{ Name = 'docker-powershell-cli-test?1' }
+        ) {
+            # Arrange
+            Mock @script:MockInvokeDocker
+    
+            # Act
+
+            # Assert
+            { Use-DockerContext $Name } | Should -Throw -ErrorId 'ContextNameNotFound,Use-DockerContext'
+        }
         Context 'when not found' {
             BeforeAll {
                 # Start out using a known context
@@ -115,18 +221,6 @@ Describe 'Use-DockerContext' {
             }
             It 'throws' {
                 $script:e | Should -Not -BeNullOrEmpty
-            }
-            It 'does not support wildcards' -TestCases @(
-                @{ Name = 'docker-powershell-cli-test-*' }
-                @{ Name = 'docker-powershell-cli-test?1' }
-            ) {
-                # Arrange
-                Mock @script:MockInvokeDocker
-    
-                # Act
-
-                # Assert
-                { Use-DockerContext $Name } | Should -Throw
             }
             It 'reports FullyQualifiedErrorId ''ContextNameNotFound,Use-DockerContext''' {
                 $script:e.FullyQualifiedErrorId | Should -Be 'ContextNameNotFound,Use-DockerContext'

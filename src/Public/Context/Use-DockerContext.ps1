@@ -68,10 +68,10 @@ function Use-DockerContext {
             $Context = Invoke-Docker context show
             Invoke-Docker context use $Name 2>&1 | Write-Debug
             try {
-                & $ScriptBlock
+                Invoke-Command $ScriptBlock -NoNewScope
             }
             finally {
-                Invoke-Docker context use 2>&1 $Context | Write-Debug
+                Invoke-Docker context use $Context | Write-Debug
             }
         }
         else {
