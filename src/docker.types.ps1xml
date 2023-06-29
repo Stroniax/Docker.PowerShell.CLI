@@ -40,15 +40,6 @@
         </Members>
     </Type>
     <Type>
-        <Name>Docker.Context</Name>
-        <Members>
-            <AliasProperty>
-                <Name>Type</Name>
-                <ReferencedMemberName>ContextType</ReferencedMemberName>
-            </AliasProperty>
-        </Members>
-    </Type>
-    <Type>
         <Name>Docker.ClientVersion</Name>
         <Members>
             <ScriptMethod>
