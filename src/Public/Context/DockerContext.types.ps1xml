@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Types>
+    <Type>
+        <Name>Docker.Context</Name>
+        <Members>
+            <AliasProperty>
+                <Name>Type</Name>
+                <ReferencedMemberName>ContextType</ReferencedMemberName>
+            </AliasProperty>
+        </Members>
+    </Type>
+</Types>

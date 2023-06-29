@@ -167,54 +167,6 @@
             </TableControl>
         </View>
         <View>
-            <Name>Docker.Context</Name>
-            <ViewSelectedBy>
-                <TypeName>Docker.Context</TypeName>
-            </ViewSelectedBy>
-            <TableControl>
-                <TableHeaders>
-                    <TableColumnHeader>
-                        <Label>Name</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader />
-                    <TableColumnHeader />
-                    <TableColumnHeader />
-                    <TableColumnHeader />
-                    <TableColumnHeader />
-                </TableHeaders>
-                <TableRowEntries>
-                    <TableRowEntry>
-                        <TableColumnItems>
-                            <TableColumnItem>
-                                <ScriptBlock>
-                                    if (-not $_.Current) {
-                                        return $_.Name
-                                    }
-
-                                    return "$($PSStyle.Foreground.BrightCyan)$($_.Name)$($PSStyle.Reset)"
-                                </ScriptBlock>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>Type</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>Description</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>DockerEndpoint</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>KubernetesEndpoint</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>Orchestrator</PropertyName>
-                            </TableColumnItem>
-                        </TableColumnItems>
-                    </TableRowEntry>
-                </TableRowEntries>
-            </TableControl>
-        </View>
-        <View>
             <Name>Docker.RemoteImage</Name>
             <ViewSelectedBy>
                 <TypeName>Docker.RemoteImage</TypeName>
