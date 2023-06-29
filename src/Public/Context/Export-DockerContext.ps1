@@ -16,7 +16,7 @@ function Export-DockerContext {
         [string]
         $Name,
 
-        [Parameter(Mandatory, Position = 1, ValueFromPipelineByPropertyName, ParameterSetName = 'Path')]
+        [Parameter(Mandatory, Position = 1, ValueFromPipelineByPropertyName)]
         [string]
         $Path,
 
@@ -110,7 +110,7 @@ function Export-DockerContext {
         Remove-Item -LiteralPath $ResolvedPath -ErrorAction Ignore -WhatIf:$false -Confirm:$false
 
         # Export the context
-        Invoke-Docker -ArgumentList $ArgumentList -ErrorVariable hadErrors 2>&1 | ForEach-Object {
+        Invoke-Docker -ArgumentList $ArgumentList 2>&1 | ForEach-Object -ErrorVariable hadErrors -Process {
             if ($_ -isnot [ErrorRecord] -or $_ -like 'Written file *') {
                 # Success message written to stderr
                 Write-Debug $_
