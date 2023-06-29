@@ -4,6 +4,7 @@ using module ../../Classes/EmptyStringArgumentCompleter.psm1
 
 function New-DockerContext {
     [CmdletBinding(
+        DefaultParameterSetName = 'DockerEndpoint',
         RemotingCapability = [RemotingCapability]::OwnedByCommand,
         PositionalBinding = $false,
         SupportsShouldProcess = $true,
@@ -11,49 +12,89 @@ function New-DockerContext {
     )]
     [OutputType([DockerContext])]
     [Alias('ndcx')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSShouldProcess',
+        Scope = 'Function', 
+        Target = 'New-DockerContext',
+        Justification = 'ShouldProcess is used in the Set-DockerContext function.'
+    )]
     param(
-        [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, Position = 0)]
+        [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9_.+-]+$')]
         [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $Name,
 
-        [Parameter(Mandatory)]
-        [Alias('DockerEndpoint', 'Host')]
-        [ValidatePattern('^[^,]+$')]
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $Description,
+
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
         [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
         $DockerHost,
 
-        [Parameter()]
-        [Alias('swarm', 'kubernetes', 'all')]
-        [string]
-        $DefaultStackOrchestrator,
-
-        [Parameter()]
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
         [ArgumentCompleter([EmptyStringArgumentCompleter])]
         [string]
-        $Description
+        $CertificateAuthority,
+
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $TclCertificateFile,
+
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $TlsKeyFile,
+
+        [Parameter(ParameterSetName = 'DockerEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [switch]
+        $SkipTlsVerify,
+
+        [Parameter(ParameterSetName = 'KubernetesEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $KubernetesConfigFile,
+
+        [Parameter(ParameterSetName = 'KubernetesEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $ContextOverride,
+
+        [Parameter(ParameterSetName = 'KubernetesEndpoint')]
+        [ArgumentCompleter([EmptyStringArgumentCompleter])]
+        [string]
+        $NamespaceOverride,
+
+        [Parameter()]
+        [ValidateSet('swarm', 'kubernetes', 'all')]
+        [LowerCaseTransformation()]
+        [string]
+        $DefaultStackOrchestrator
     )
     process {
-        $ArgumentList = @(
-            'context'
-            'create'
-            $Name
-            if ($DefaultStackOrchestrator) { '--default-stack-orchestrator'; $DefaultStackOrchestrator }
-            if ($Description) { '--description'; $Description }
-            if ($DockerHost) { '--docker'; "host=$DockerHost" }
-            if ($Kubernetes) { '--kubernetes'; $Kubernetes }
-        )
+        # Since Set-DockerContext can create a new docker context, we can use it
+        # after verifying that the context does not already exist
 
-        if ($PSCmdlet.ShouldProcess(
-                "Creating docker context '$Name' with host '$($DockerHost)'.",
-                "Create docker context '$Name' with host '$($DockerHost)'?",
-                "docker $ArgumentList"
-            )) {
-            Invoke-Docker -ArgumentList $ArgumentList 2>&1 | Write-Debug
-            if ($?) {
-                Get-DockerContext -Name $Name
+        $ExistingContexts = Invoke-Docker context list --format '{{ .Name }}'
+
+        if ($ExistingContexts -contains $Name) {
+            $WriteError = @{
+                Exception         = [InvalidOperationException]::new('A context with the provided name already exists.')
+                Message           = "A context with the name '$Name' already exists."
+                Category          = [ErrorCategory]::InvalidArgument
+                TargetObject      = $Name
+                ErrorId           = 'ContextExists'
+                RecommendedAction = 'Use Set-DockerContext to modify the existing context, or remove the existing context and try again.'
             }
+            Write-Error @WriteError
+            return
         }
+
+        Set-DockerContext @PSBoundParameters -PassThru
     }
 }
