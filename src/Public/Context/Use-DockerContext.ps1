@@ -50,11 +50,11 @@ function Use-DockerContext {
     process {
         if (-not (Test-DockerContext $Name)) {
             $WriteError = @{
-                Message      = "No context found with the specified name '$Unmatched'."
+                Message      = "No context found with the specified name '$Name'."
                 Exception    = [ItemNotFoundException]'No context found with the specified name.'
                 Category     = 'ObjectNotFound'
                 ErrorId      = 'ContextNameNotFound'
-                TargetObject = $Unmatched
+                TargetObject = $Name
                 ErrorAction  = 'Stop'
             }
             Write-Error @WriteError

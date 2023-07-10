@@ -13,6 +13,7 @@ function Remove-DockerContext {
     [Alias('rdcx')]
     param(
         [Parameter(Position = 0, Mandatory, ValueFromPipelineByPropertyName)]
+        [SupportsWildcards()]
         [Alias('ContextName')]
         [ArgumentCompleter([DockerContextCompleter])]
         [string[]]

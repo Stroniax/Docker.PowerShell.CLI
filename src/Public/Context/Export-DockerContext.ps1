@@ -12,6 +12,7 @@ function Export-DockerContext {
     [Alias('epdcx')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
+        [SupportsWildcards()]
         [ArgumentCompleter([DockerContextCompleter])]
         [string]
         $Name,
@@ -41,6 +42,18 @@ function Export-DockerContext {
             return
         }
 
+        if ($context.Count -eq 0) {
+            # Wildcard name with no match
+            $WriteError = @{
+                Message      = "No context found with the specified name '$Name'."
+                Exception    = [ItemNotFoundException]'No context found with the specified name.'
+                Category     = 'ObjectNotFound'
+                ErrorId      = 'ContextNameNotFound'
+                TargetObject = $Name
+            }
+            Write-Error @WriteError
+            return
+        }
         if ($context.Count -gt 1) {
             $WriteError = @{
                 Exception    = [System.Reflection.AmbiguousMatchException]::new('Multiple Docker contexts match the provided name.')
@@ -61,10 +74,10 @@ function Export-DockerContext {
         $ParentPath = Split-Path -Path $ResolvedPath -Parent -ErrorAction Ignore
         if ($ParentPath -and !(Test-Path $ParentPath)) {
             $WriteError = @{
-                Exception    = [System.IO.DirectoryNotFoundException]::new("Could not find a part of the path '$ParentPath'.")
-                ErrorId      = 'PathNotFound'
-                TargetObject = $ParentPath
                 Message      = "Could not find a part of the path '$ParentPath'."
+                Exception    = [System.IO.DirectoryNotFoundException]::new('Could not find a part of the path.')
+                ErrorId      = 'DirectoryNotFound'
+                TargetObject = $ParentPath
                 Category     = [ErrorCategory]::ObjectNotFound
             }
             Write-Error @WriteError
@@ -74,10 +87,10 @@ function Export-DockerContext {
         # Ensure the file does not exist
         if (!$Force -and (Test-Path -LiteralPath $ResolvedPath)) {
             $WriteError = @{
-                Exception    = [System.IO.IOException]::new("The file '$ResolvedPath' already exists.")
+                Message      = "The file '$ResolvedPath' already exists."
+                Exception    = [System.IO.IOException]::new('The file already exists.')
                 ErrorId      = 'FileExists'
                 TargetObject = $ResolvedPath
-                Message      = "The file '$ResolvedPath' already exists."
                 Category     = [ErrorCategory]::ResourceExists
             }
             Write-Error @WriteError
