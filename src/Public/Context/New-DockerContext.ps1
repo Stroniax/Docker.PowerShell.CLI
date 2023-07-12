@@ -1,6 +1,7 @@
 using namespace System.Management.Automation
 using module ../../Classes/DockerContext.psm1
 using module ../../Classes/EmptyStringArgumentCompleter.psm1
+using module ../../Classes/LowerCaseTransformation.psm1
 
 function New-DockerContext {
     [CmdletBinding(
@@ -14,6 +15,7 @@ function New-DockerContext {
     [Alias('ndcx')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
         'PSShouldProcess',
+        '',
         Scope = 'Function', 
         Target = 'New-DockerContext',
         Justification = 'ShouldProcess is used in the Set-DockerContext function.'

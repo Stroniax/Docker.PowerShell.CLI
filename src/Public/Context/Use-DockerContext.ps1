@@ -5,20 +5,6 @@ using module ../../Classes/DockerContext.psm1
 using module ../../Classes/EmptyScriptBlockArgumentCompleter.psm1
 using module ../../Classes/LowerCaseTransformation.psm1
 
-function Test-DockerContext {
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [string]
-        $Name
-    )
-    process {
-        $Context = Invoke-Docker context list --format '{{ .Name }}'
-
-        $Context -contains $Name
-    }
-}
-
 function Use-DockerContext {
     [CmdletBinding(
         DefaultParameterSetName = 'Default',
@@ -48,7 +34,8 @@ function Use-DockerContext {
         $PassThru
     )
     process {
-        if (-not (Test-DockerContext $Name)) {
+        $ExistingContexts = Invoke-Docker context list --format '{{ .Name }}'
+        if ($ExistingContexts -notcontains $Name) {
             $WriteError = @{
                 Message      = "No context found with the specified name '$Name'."
                 Exception    = [ItemNotFoundException]'No context found with the specified name.'

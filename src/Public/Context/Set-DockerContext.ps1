@@ -106,55 +106,55 @@ function Set-DockerContext {
             'DockerEndpoint' {
                 $configurationType = '--docker'
                 if ($DockerHost) {
-                    $configuration.Append("host=$DockerHost")
+                    [void]$configuration.Append("host=$DockerHost")
                 }
                 if ($CertificateAuthority) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append("ca=$CertificateAuthority")
+                    [void]$configuration.Append("ca=$CertificateAuthority")
                 }
                 if ($TclCertificateFile) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append("cert=$TclCertificateFile")
+                    [void]$configuration.Append("cert=$TclCertificateFile")
                 }
                 if ($TlsKeyFile) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append("key=$TlsKeyFile")
+                    [void]$configuration.Append("key=$TlsKeyFile")
                 }
                 if ($SkipTlsVerify) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append('skip-tls-verify=true')
+                    [void]$configuration.Append('skip-tls-verify=true')
                 }
                 elseif ($PSBoundParameters.ContainsKey('SkipTlsVerify')) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append('skip-tls-verify=false')
+                    [void]$configuration.Append('skip-tls-verify=false')
                 }
             }
             'KubernetesEndpoint' {
                 $configurationType = '--kubernetes'
                 if ($KubernetesConfigFile) {
-                    $configuration.Append("config-file=$KubernetesConfigFile")
+                    [void]$configuration.Append("config-file=$KubernetesConfigFile")
                 }
                 if ($ContextOverride) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append("context-override=$ContextOverride")
+                    [void]$configuration.Append("context-override=$ContextOverride")
                 }
                 if ($NamespaceOverride) {
                     if ($configuration.Length -gt 0) {
-                        $configuration.Append(',')
+                        [void]$configuration.Append(',')
                     }
-                    $configuration.Append("namespace-override=$NamespaceOverride")
+                    [void]$configuration.Append("namespace-override=$NamespaceOverride")
                 }
             }
             default {
