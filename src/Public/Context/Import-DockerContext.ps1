@@ -22,7 +22,7 @@ function Import-DockerContext {
         [string]
         $Path,
 
-        [Parameter(Mandatory, Position = 1, ParameterSetName = 'LiteralPath')]
+        [Parameter(Mandatory, Position = 1, ParameterSetName = 'LiteralPath', ValueFromPipelineByPropertyName)]
         [Alias('PSPath')]
         [string]
         $LiteralPath,
